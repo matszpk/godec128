@@ -195,10 +195,30 @@ func ParseUDec128(str string, tenPow int) (UDec128, error) {
     return UDec128{}, nil
 }
 
+var float64_revpowers []float64 = []float64{
+    1,
+    0.1,
+    0.01,
+    0.001,
+    0.0001,
+    0.00001,
+    0.000001,
+    0.0000001,
+    0.00000001,
+    0.000000001,
+    0.0000000001,
+    0.00000000001,
+    0.000000000001,
+    0.0000000000001,
+    0.00000000000001,
+    0.000000000000001,
+}
+
 func (a UDec128) ToFloat64(tenPow int) float64 {
-    return 0.0
+    return goint128.UInt128(a).ToFloat64()*float64_revpowers[tenPow]
 }
 
 func Float64ToUDec128(a float64, tenPow int) (UDec128, error) {
-    return UDec128{}, nil
+    r, err := goint128.Float64ToUInt128(a*float64(uint64_powers[tenPow]))
+    return UDec128(r), err
 }
