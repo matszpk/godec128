@@ -172,6 +172,15 @@ func (a UDec128) MulFull(b UDec128) (UDec128, UDec128) {
     return UDec128(chi), UDec128(clo)
 }
 
+// shift 128-bit unsigned integer left by b bits
+func (a UDec128) Shl(b uint) UDec128 {
+    return UDec128(goint128.UInt128(a).Shl(b))
+}
+
+func (a UDec128) Shr(b uint) UDec128 {
+    return UDec128(goint128.UInt128(a).Shr(b))
+}
+
 func (a UDec128) Div(b UDec128, tenPow int) (UDec128, UDec128) {
     // multiply by tenPowers
     chi, clo := goint128.UInt128(a).MulFull(goint128.UInt128{uint64_powers[tenPow], 0})
