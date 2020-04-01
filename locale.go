@@ -85,7 +85,7 @@ func LocaleParseUDec128(lang, str string, tenPow uint, rounding bool) (UDec128, 
         if r>='0' && r<='9' {
             // if standard digits
             os = append(os, r)
-        } else if r!=l.Sep1000 && r!=l.Sep1000_2 {
+        } else if r!=l.Sep1000 && r!=l.Sep1000_2 && r!=l.Comma {
             // if non-standard digit
             dig:=0
             found := false

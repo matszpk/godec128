@@ -22,6 +22,7 @@
 package godec128
 
 import (
+    "strconv"
     "testing"
 )
 
@@ -223,6 +224,45 @@ func TestUDec128LocaleFormat(t *testing.T) {
         }
         if tc.a!=a {
             t.Errorf("Argument has been modified: %d %s: %v!=%v", i, tc.lang, a, tc.a)
+        }
+    }
+}
+
+type UDec128LocParseTC struct {
+    lang string
+    str string
+    tenPow uint
+    rounding bool
+    expected UDec128
+    expError error
+}
+
+func TestUDec128LocaleParse(t *testing.T) {
+    testCases := []UDec128LocParseTC {
+        UDec128LocParseTC{ "en", "", 10, false, UDec128{}, strconv.ErrSyntax },
+        UDec128LocParseTC{ "en", "1,234,567,890.1234567891", 10, false,
+                UDec128{0xab54a98ceb1f0ad3,0}, nil },
+        UDec128LocParseTC{ "en", "1,234,567,890.12345678915", 10, false,
+                UDec128{0xab54a98ceb1f0ad3,0}, nil },
+        UDec128LocParseTC{ "en", "1,234,567,890.12345678915", 10, true,
+                UDec128{0xab54a98ceb1f0ad4,0}, nil },
+        UDec128LocParseTC{ "en", "1,234,567890.1234567891", 10, false,
+                UDec128{0xab54a98ceb1f0ad3,0}, nil },
+        UDec128LocParseTC{ "pl", "1 234 567 890,1234567891", 10, false,
+                UDec128{0xab54a98ceb1f0ad3,0}, nil },
+        UDec128LocParseTC{ "pl", "1 234 567 890,1234567891", 10, false,
+                UDec128{0xab54a98ceb1f0ad3,0}, nil },
+        UDec128LocParseTC{ "bn", "১,২৩,৪৫,৬৭,৮৯০.১২৩৪৫৬৭৮৯১", 10, false,
+                UDec128{0xab54a98ceb1f0ad3,0}, nil },
+        UDec128LocParseTC{ "bn", "1,234,567890.1234567891", 10, false,
+                UDec128{0xab54a98ceb1f0ad3,0}, nil },
+    }
+    for i, tc := range testCases {
+        result, err := LocaleParseUDec128(tc.lang, tc.str, tc.tenPow, tc.rounding)
+        if tc.expected!=result || tc.expError!=err {
+            t.Errorf("Result mismatch: %d: parse(%v,%v,%v,%v)->%v,%v!=%v,%v",
+                     i, tc.lang, tc.str, tc.tenPow, tc.rounding,
+                     tc.expected, tc.expError, result, err)
         }
     }
 }
