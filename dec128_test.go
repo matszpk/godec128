@@ -91,52 +91,6 @@ func getPanic2(f func()) (bool, string) {
     }
 }
 
-type UDec128_64TC struct {
-    a UDec128
-    b uint64
-    expected UDec128
-}
-
-func TestUDec128Add64(t *testing.T) {
-    testCases := []UDec128_64TC {
-        UDec128_64TC{ UDec128{ 3454, 3421 }, 78731, UDec128{ 82185, 3421 } },
-        UDec128_64TC{ UDec128{ 0xffffffffffff1001, 0x2446 }, 0xf003,
-                UDec128{ 0x4, 0x2447 } },
-    }
-    for i, tc := range testCases {
-        a, b := tc.a, tc.b
-        result := tc.a.Add64(tc.b)
-        if tc.expected!=result {
-            t.Errorf("Result mismatch: %d: %v+%v->%v!=%v",
-                     i, tc.a, tc.b, tc.expected, result)
-        }
-        if tc.a!=a || tc.b!=b {
-            t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",
-                     i, a, b, tc.a, tc.b)
-        }
-    }
-}
-
-func TestUDec128Sub64(t *testing.T) {
-    testCases := []UDec128_64TC {
-        UDec128_64TC{ UDec128{ 81185, 9165 }, 2454, UDec128{ 78731, 9165 } },
-        UDec128_64TC{ UDec128{ 0x5, 0xccff }, 0xffffffffffff2001,
-                UDec128{ 0xe004, 0xccfe } },
-    }
-    for i, tc := range testCases {
-        a, b := tc.a, tc.b
-        result := tc.a.Sub64(tc.b)
-        if tc.expected!=result {
-            t.Errorf("Result mismatch: %d: %v-%v->%v!=%v",
-                     i, tc.a, tc.b, tc.expected, result)
-        }
-        if tc.a!=a || tc.b!=b {
-            t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",
-                     i, a, b, tc.a, tc.b)
-        }
-    }
-}
-
 type UDec128CTC struct {
     a, b UDec128
     c uint64
@@ -268,6 +222,12 @@ func TestUDec128Mul(t *testing.T) {
     }
 }
 
+type UDec128_64TC struct {
+    a UDec128
+    b uint64
+    expected UDec128
+}
+
 func TestUDec128Mul64(t *testing.T) {
     testCases := []UDec128_64TC {
         UDec128_64TC { UDec128{ 0xc9baa109a40baa11, 0x384b9a928941ac3 },
@@ -381,30 +341,29 @@ type UDec128Div64TC struct {
     a UDec128
     b uint64
     expected UDec128
-    expRem uint64
 }
 
 func TestUDec128Div64(t *testing.T) {
     testCases := []UDec128Div64TC {
         UDec128Div64TC { UDec128{ 0x0d362b7e0421d339, 0xbb09d477baa0 },
-            0x6afcb5c6af1e507b, UDec128{ 492083670228144, 0 }, 0x13f254e3d9ce0aa9 },
+            0x6afcb5c6af1e507b, UDec128{ 492083670228144, 0 } },
         UDec128Div64TC { UDec128{ 0x0bc4f2ea7ec06c3f, 0x7bdcd02be78fe },
-            0x3e2dc3dd417, UDec128{ 0xf6491fcb9513612d, 0x1fd }, 0x25139d06d34 },
-        UDec128Div64TC { UDec128{ 0, 1<<55 }, 1<<55, UDec128{ 0, 1 }, 0 },
-        UDec128Div64TC { UDec128{ 0, 1<<62 }, 1<<55, UDec128{ 0, 128 }, 0 },
+            0x3e2dc3dd417, UDec128{ 0xf6491fcb9513612d, 0x1fd } },
+        UDec128Div64TC { UDec128{ 0, 1<<55 }, 1<<55, UDec128{ 0, 1 } },
+        UDec128Div64TC { UDec128{ 0, 1<<62 }, 1<<55, UDec128{ 0, 128 } },
         UDec128Div64TC { UDec128{ 0x2e9700d1e595b258, 0x34a67968e5a },
-            0xc23b96121, UDec128{ 0x64b6c9b6ee122e0c, 0x45 }, 0x9671f36cc },
-        UDec128Div64TC { UDec128{ 55, 0 }, 7, UDec128{ 7, 0 }, 6 },
+            0xc23b96121, UDec128{ 0x64b6c9b6ee122e0c, 0x45 } },
+        UDec128Div64TC { UDec128{ 55, 0 }, 7, UDec128{ 7, 0 } },
         // no remainder
         UDec128Div64TC { UDec128{ 0x0f2b92f72757046a, 0x15b807b7564a },
-            0x26b380a13ca, UDec128{ 0xfaa679c50cd8d211, 0x8 }, 0 },
+            0x26b380a13ca, UDec128{ 0xfaa679c50cd8d211, 0x8 } },
     }
     for i, tc := range testCases {
         a, b := tc.a, tc.b
-        result, rem := tc.a.Div64(tc.b)
-        if tc.expected!=result || tc.expRem!=rem {
-            t.Errorf("Result mismatch: %d: %v/%v->%v,%v!=%v,%v",
-                     i, tc.a, tc.b, tc.expected, tc.expRem, result, rem)
+        result:= tc.a.Div64(tc.b)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: %v/%v->%v!=%v",
+                     i, tc.a, tc.b, tc.expected, result)
         }
         if tc.a!=a || tc.b!=b {
             t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",
@@ -416,7 +375,7 @@ func TestUDec128Div64(t *testing.T) {
 type UDec128DivFTC struct {
     alo, ahi UDec128
     b UDec128
-    expected, expRem UDec128
+    expected UDec128
 }
 
 func TestUDec128DivFull(t *testing.T) {
@@ -424,74 +383,26 @@ func TestUDec128DivFull(t *testing.T) {
         UDec128DivFTC{ UDec128{ 0xa168b431ea4cbf25, 0xeeaf8afeafe15bf3 }, // alo
             UDec128{ 0x79da7cfc64734fc8, 0x1ae093566b591f }, // ahi
             UDec128{ 0x64611073ad67885c, 0x159b7addc721d10f }, // b
-            UDec128{ 0x71e0ef1e6710ea31, 0x13e6fd8cef95977 }, // quo
-            UDec128{ 0x38db746f8d178d89, 0x1011ed7a4d743993 } }, // rem
+            UDec128{ 0x71e0ef1e6710ea31, 0x13e6fd8cef95977 } }, // quo
         UDec128DivFTC{ UDec128{ 0xc9a7d6e2cc4a9fe1, 0x7c5f7c4fe1dd3975 }, // alo
             UDec128{ 0x78c86ab5339b57fc, 0xaa9ea603a6ff1 }, // ahi
             UDec128{ 0x8d4959f4e6d39704, 0x17b4ad5d2b7537 }, // b
-            UDec128{ 0x106a3b20e0f77e82, 0x73288478235baedf }, // quo
-            UDec128{ 0x74f4f81f3ba7f7d9, 0x24c773dc419e1 } }, // rem
+            UDec128{ 0x106a3b20e0f77e82, 0x73288478235baedf } }, // quo
         UDec128DivFTC{ UDec128{ 0xad1b0bef418b04f3, 0xad386b96ec18a75d }, // alo
             UDec128{ 0x3c179a833f04, 0 }, // ahi
             UDec128{ 0x448ab60d06e16d71, 0x21277fb3c975915 }, // b
-            UDec128{ 0x1d00017916c509, 0 }, // quo
-            UDec128{ 0x4c150da3b9b036fa, 0x1030338b9fb3651 } }, // rem
+            UDec128{ 0x1d00017916c509, 0 } }, // quo
         UDec128DivFTC{ UDec128{ 0xfe846594f784bcc1, 0xf3abd28b98484862 }, // alo
             UDec128{ 0xd3e91d7d4a, 0 }, // ahi
             UDec128{ 0x1725a5b765d6df45, 0x251135 }, // b
-            UDec128{ 0x978eaa37efa35277, 0x5b788 }, // quo
-            UDec128{ 0x546262a1392fd9ae, 0x17d60b } }, // rem
-        UDec128DivFTC{ UDec128{ 0x17575839531cc261, 0x876500912715e24f }, // alo
-            UDec128{ 0x3832d66fa89b0, 0 }, // ahi
-            UDec128{ 0xbb13d0419ee95154, 0x1ef6c6ca9f102 }, // b
-            UDec128{ 0xd0a1ad051eb58b86, 1 }, // quo
-            UDec128{ 0x4d87a7751d6f9469, 0xf20352ff6a13 } }, // rem
-        UDec128DivFTC{ UDec128{ 0xb04916027d7360fd, 0xbdd6fc093b36eef0 }, // alo
-            UDec128{ 0x1e2eb3c64254a, 0 }, // ahi
-            UDec128{ 0x8076a6a122255eb2, 0x93b26bfc783ba6 }, // b
-            UDec128{ 0x34508756e87ad76, 0 }, // quo
-            UDec128{ 0xcd547bea135d70f1, 0x8f7c9163375c51 } }, // rem
-        // lower a and b
-        UDec128DivFTC { UDec128{ 0x0d362b7e0421d339, 0xbb09d477baa0 }, UDec128{}, // a
-            UDec128{ 0x6afcb5c6af1e507b, 0 }, // b
-            UDec128{ 492083670228144, 0 }, // quo
-            UDec128 {0x13f254e3d9ce0aa9, 0 } }, // rem
-        UDec128DivFTC { UDec128{ 0x0bc4f2ea7ec06c3f, 0x7bdcd02be78fe }, UDec128{}, // a
-            UDec128{ 0x3e2dc3dd417, 0 }, // b
-            UDec128{ 0xf6491fcb9513612d, 0x1fd }, // quo
-            UDec128{ 0x25139d06d34 } }, // rem
-        UDec128DivFTC { UDec128{ 58, 0 }, UDec128{}, UDec128{ 7, 0 },
-            UDec128{ 8, 0 }, UDec128{ 2, 0 } },
-        // no remainder
-        UDec128DivFTC { UDec128{ 0xf023facc617c5db4, 0xe5a87c07bf5a5a69 }, // alo
-            UDec128{ 0xaf5996526c0426de, 0x5f468b14014b }, // ahi
-            UDec128{ 0x9523b1e7742f2017, 0x1b2e5c6b574ad598 }, // b
-            UDec128{ 0xeacaf09f790c4c6c, 0x38155b1981fb0 }, UDec128{} }, //quo,rem
-        // full remainder and max quotient
-        UDec128DivFTC { UDec128{ 0xffffffffffffffff, 0xffffffffffffffff }, // alo
-            UDec128{ 0x54cd83b46f259de8, 0x213a9ec7 }, // ahi
-            UDec128{ 0x54cd83b46f259de9, 0x213a9ec7 }, // b
-            UDec128{ 0xffffffffffffffff, 0xffffffffffffffff }, // quo
-            UDec128{ 0x54cd83b46f259de8, 0x213a9ec7 } }, // rem
-        // smaller a
-        UDec128DivFTC { UDec128{ 0xc1e79b199458a88a, 0x38f41ebf9d94b }, UDec128{}, // a
-            UDec128{ 0x9cc0cb116cd60d5e, 0x1051f1062 }, // b
-            UDec128{ 0x37d62, 0 }, UDec128{ 0x3bbe15c73dc6a48e, 0x99ed96bf } }, // quo,rem
-        UDec128DivFTC {
-            UDec128{ 0xcc8a934a9b390141, 0xd8a91058bc8f94ae }, UDec128{}, // a
-            UDec128{ 0xcc8a934a9b39013f, 0xd8a91058bc8f94ae }, // b
-            UDec128{ 1, 0 }, UDec128{ 2, 0 } }, // quo,rem
-        UDec128DivFTC {
-            UDec128{ 0xcc8a934a9b390141, 0xd8a91058bc8f94ae }, UDec128{}, // a
-            UDec128{ 0xcc8a934a9b390144, 0xd8a91058bc8f94ae }, // b
-            UDec128{}, UDec128{ 0xcc8a934a9b390141, 0xd8a91058bc8f94ae } }, // quo,rem
+            UDec128{ 0x978eaa37efa35277, 0x5b788 } }, // quo
     }
     for i, tc := range testCases {
         alo, ahi, b := tc.alo, tc.ahi, tc.b
-        result, rem := UDec128DivFull(tc.ahi, tc.alo, tc.b)
-        if tc.expected!=result || tc.expRem!=rem {
-            t.Errorf("Result mismatch: %d: (%v,%v)/%v->%v,%v!=%v,%v",
-                     i, tc.alo, tc.ahi, tc.b, tc.expected, tc.expRem, result, rem)
+        result := UDec128DivFull(tc.ahi, tc.alo, tc.b)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: (%v,%v)/%v->%v!=%v",
+                     i, tc.alo, tc.ahi, tc.b, tc.expected, result)
         }
         if tc.alo!=alo || tc.ahi!=ahi || tc.b!=b {
             t.Errorf("Argument has been modified: %d: %v,%v,%v!=%v,%v,%v",
@@ -526,24 +437,21 @@ type UDec128DivTC struct {
     a, b UDec128
     tenPow uint
     expected UDec128
-    expRem UDec128
 }
 
 func TestUDec128Div(t *testing.T) {
     testCases := []UDec128DivTC {
         UDec128DivTC { UDec128{ 0x29d774b64027d71c, 0x50339e89 },
-            UDec128{ 0xe1320b466aa1ee71, 0x9c }, 13,
-            UDec128{ 0xa64cfe4e65832020, 0x4 }, UDec128{ 0x67b755820e0a91e0, 0x79 } },
+            UDec128{ 0xe1320b466aa1ee71, 0x9c }, 13, UDec128{ 0xa64cfe4e65832020, 0x4 } },
         UDec128DivTC { UDec128{ 0xaea112fccc354d11, 0x46b7da4 },
-            UDec128{ 0xc2fea748532c9056, 0x4b30de }, 10,
-            UDec128{ 0x2309736671, 0 }, UDec128{ 0x38a1b1ab078e2a0a, 0x226d78 } },
+            UDec128{ 0xc2fea748532c9056, 0x4b30de }, 10, UDec128{ 0x2309736671, 0 } },
     }
     for i, tc := range testCases {
         a, b := tc.a, tc.b
-        result, rem := tc.a.Div(tc.b, tc.tenPow)
-        if tc.expected!=result || tc.expRem!=rem {
-            t.Errorf("Result mismatch: %d: div(%v,%v,%v)->%v,%v!=%v,%v",
-                     i, tc.a, tc.b, tc.tenPow, tc.expected, tc.expRem, result, rem)
+        result := tc.a.Div(tc.b, tc.tenPow)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: div(%v,%v,%v)->%v!=%v",
+                     i, tc.a, tc.b, tc.tenPow, tc.expected, result)
         }
         if tc.a!=a || tc.b!=b {
             t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",

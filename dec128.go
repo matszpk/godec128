@@ -31,38 +31,30 @@ import (
 
 type UDec128 goint128.UInt128
 
-// add 128-bit unsigned integers
+// add 128-bit decimal fixed points
 func (a UDec128) Add(b UDec128) UDec128 {
     return UDec128(goint128.UInt128(a).Add(goint128.UInt128(b)))
 }
 
-// add 128-bit unsigned integers with carry and return sum and output carry
+// add 128-bit decimal fixed points with carry and return sum and output carry
 func (a UDec128) AddC(b UDec128, oldCarry uint64) (UDec128, uint64) {
     v, c := goint128.UInt128(a).AddC(goint128.UInt128(b), oldCarry)
     return UDec128(v), c
 }
 
-// add 128-bit unsigned integer and 64-bit unsigned integer
-func (a UDec128) Add64(b uint64) UDec128 {
-    return UDec128(goint128.UInt128(a).Add64(b))
-}
-
-// subtract 128-bit unsigned integers
+// subtract 128-bit decimal fixed points
 func (a UDec128) Sub(b UDec128) UDec128 {
     return UDec128(goint128.UInt128(a).Sub(goint128.UInt128(b)))
 }
 
-// subtract 128-bit unsigned integers with borrow and return difference and borrow
+// subtract 128-bit decimal fixed points with borrow and return difference and borrow
 func (a UDec128) SubB(b UDec128, oldBorrow uint64) (UDec128, uint64) {
     v, br := goint128.UInt128(a).SubB(goint128.UInt128(b), oldBorrow)
     return UDec128(v), br
 }
 
-// subtract 64-bit unsigned from 128-bit unsigned integer
-func (a UDec128) Sub64(b uint64) UDec128 {
-    return UDec128(goint128.UInt128(a).Sub64(b))
-}
-
+// compare 128-bit decimal fixed points and return 0 if they equal,
+// 1 if first is greater than second, or -1 if first is lesser than second
 func (a UDec128) Cmp(b UDec128) int {
     return goint128.UInt128(a).Cmp(goint128.UInt128(b))
 }
@@ -151,48 +143,55 @@ func uint128_64DivFullR(hi, lo goint128.UInt128, b uint64,
     return c
 }
 
+// multiply 128-bit decimal fixed points and return lower 128 bits value
 func (a UDec128) Mul(b UDec128, tenPow uint, rounding bool) UDec128 {
     chi, clo := goint128.UInt128(a).MulFull(goint128.UInt128(b))
     // divide by ten power
     return UDec128(uint128_64DivFullR(chi, clo, uint64_powers[tenPow], rounding))
 }
 
+// multiply 128-bit decimal fixed point and 64-bit unsigned integer and
+// return lower 128 bits product
 func (a UDec128) Mul64(b uint64) UDec128 {
     return UDec128(goint128.UInt128(a).Mul64(b))
 }
 
-// fixed point is in 10**(tenPow*2)
+// multiply 128-bit decimal fixed point and return high and lower product
+// integer part is multiplied by 10**tenPow
 func (a UDec128) MulFull(b UDec128) (UDec128, UDec128) {
     chi, clo := goint128.UInt128(a).MulFull(goint128.UInt128(b))
     return UDec128(chi), UDec128(clo)
 }
 
-// shift 128-bit unsigned integer left by b bits
+// shift 128-bit decimal fixed point left by b bits
 func (a UDec128) Shl(b uint) UDec128 {
     return UDec128(goint128.UInt128(a).Shl(b))
 }
 
+// shift 128-bit decimal fixed point right by b bits
 func (a UDec128) Shr(b uint) UDec128 {
     return UDec128(goint128.UInt128(a).Shr(b))
 }
 
-func (a UDec128) Div(b UDec128, tenPow uint) (UDec128, UDec128) {
+// divide 128-bit decimal fixed points
+func (a UDec128) Div(b UDec128, tenPow uint) UDec128 {
     // multiply by tenPowers
     chi, clo := goint128.UInt128(a).MulFull(goint128.UInt128{uint64_powers[tenPow], 0})
-    q, r := goint128.UInt128DivFull(chi, clo, goint128.UInt128(b))
-    return UDec128(q), UDec128(r)
+    q, _ := goint128.UInt128DivFull(chi, clo, goint128.UInt128(b))
+    return UDec128(q)
 }
 
-func (a UDec128) Div64(b uint64) (UDec128, uint64) {
-    q, r := goint128.UInt128(a).Div64(b)
-    return UDec128(q), r
+// divide 128-bit unsigned integer by 64-bit unsigned integer
+func (a UDec128) Div64(b uint64) UDec128 {
+    q, _ := goint128.UInt128(a).Div64(b)
+    return UDec128(q)
 }
 
 // fixed point is in 10**(tenPow*2)
-func UDec128DivFull(hi, lo, b UDec128) (UDec128, UDec128) {
-    q, r := goint128.UInt128DivFull(goint128.UInt128(hi), goint128.UInt128(lo),
+func UDec128DivFull(hi, lo, b UDec128) UDec128 {
+    q, _ := goint128.UInt128DivFull(goint128.UInt128(hi), goint128.UInt128(lo),
                                     goint128.UInt128(b))
-    return UDec128(q), UDec128(r)
+    return UDec128(q)
 }
 
 var zeroPart string = "0.000000000000000000000000000"
