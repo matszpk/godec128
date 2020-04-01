@@ -210,9 +210,35 @@ func TestUDec128Cmp(t *testing.T) {
     }
 }
 
-type UDec128Mul struct {
+type UDec128MulTC struct {
     a, b UDec128
     tenPow uint
-    
+    rounding bool
     expected UDec128
+}
+
+func TestUDec128Mul(t *testing.T) {
+    testCases := []UDec128MulTC {
+        UDec128MulTC{ UDec128{ 0x840875a4212a9e42, 0x11310 },
+                UDec128{ 0x3df9379d88970c7e, 0xc7 }, 8, false,
+                UDec128{ 0xd3d0a477d6fda958, 0x23eaa838e89ce65c } },
+        UDec128MulTC{ UDec128{ 0x840875a4212a9e43, 0x11310 }, // no rounding
+                UDec128{ 0x3df9379d88970c7e, 0xc7 }, 8, false,
+                UDec128{ 0xd3d0c5e538df353a, 0x23eaa838e89ce65c } },
+        UDec128MulTC{ UDec128{ 0x840875a4212a9e43, 0x11310 }, // rounding
+                UDec128{ 0x3df9379d88970c7e, 0xc7 }, 8, true,
+                UDec128{ 0xd3d0c5e538df353b, 0x23eaa838e89ce65c } },
+    }
+    for i, tc := range testCases {
+        a, b := tc.a, tc.b
+        result := tc.a.Mul(tc.b, tc.tenPow, tc.rounding)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: mul(%v,%v,%v,%v)->%v!=%v",
+                     i, tc.a, tc.b, tc.tenPow, tc.rounding, tc.expected, result)
+        }
+        if tc.a!=a || tc.b!=b {
+            t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",
+                     i, a, b, tc.a, tc.b)
+        }
+    }
 }
