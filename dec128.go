@@ -218,7 +218,7 @@ func (a UDec128) Format(tenPow uint, trimZeroes bool) string {
     return str[:slen-int(tenPow)]+"."+str[slen-int(tenPow):i]
 }
 
-func ParseUDec128(str string, tenPow uint) (UDec128, error) {
+func ParseUDec128(str string, tenPow uint, rounding bool) (UDec128, error) {
     if tenPow==0 {
         v, err := goint128.ParseUInt128(str)
         return UDec128(v), err
@@ -242,7 +242,7 @@ func ParseUDec128(str string, tenPow uint) (UDec128, error) {
         v, err := goint128.ParseUInt128(s2)
         if err!=nil { return UDec128{}, err }
         // rounding
-        if realSlen!=slen && str[realSlen]>='5' {
+        if rounding && realSlen!=slen && str[realSlen]>='5' {
             v = v.Add64(1) // add rounding
         }
         // check last part of string

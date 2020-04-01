@@ -23,6 +23,7 @@
  
  import (
     "fmt"
+    "strconv"
     "testing"
 )
 
@@ -562,6 +563,8 @@ func TestUDec128Format(t *testing.T) {
     testCases := []UDec128FmtTC {
         UDec128FmtTC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 15, false,
             "217224419425.143693331510191" },
+        UDec128FmtTC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 10, false,
+            "21722441942514369.3331510191" },
         UDec128FmtTC{ UDec128{ 0x5f75348b0131b3b8, 0xb3af0f }, 15, false,
             "217224419425.143693331510200" },
         UDec128FmtTC{ UDec128{ 0x5f75348b0131b3b8, 0xb3af0f }, 15, true,
@@ -586,8 +589,15 @@ func TestUDec128Format(t *testing.T) {
             "3.211984593924556" },
         UDec128FmtTC{ UDec128{ 33000000000000000, 0 }, 15, false,
             "33.000000000000000" },
+        UDec128FmtTC{ UDec128{ 33000000000000000, 0 }, 15, true,
+            "33." },
         UDec128FmtTC{ UDec128{ 33400000000000000, 0 }, 15, true,
             "33.4" },
+        UDec128FmtTC{ UDec128{ 33000400000000000, 0 }, 15, true,
+            "33.0004" },
+        // zero digits after comma
+        UDec128FmtTC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 0, false,
+            "217224419425143693331510191" },
     }
     for i, tc := range testCases {
         a := tc.a
@@ -598,6 +608,64 @@ func TestUDec128Format(t *testing.T) {
         }
         if tc.a!=a {
             t.Errorf("Argument has been modified: %d: %v!=%v", i, a, tc.a)
+        }
+    }
+}
+
+type UDec128ParseTC struct {
+    str string
+    tenPow uint
+    rounding bool
+    expected UDec128
+    expError error
+}
+
+func TestUDec128Parse(t *testing.T) {
+    testCases := []UDec128ParseTC {
+        UDec128ParseTC{ "217224419425.143693331510191", 15, false,
+            UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, nil },
+        UDec128ParseTC{ "217224419425.1436933315101915", 15, false,
+            UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, nil },
+        UDec128ParseTC{ "217224419425.143693331510191999", 15, false,
+            UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, nil },
+        UDec128ParseTC{ "217224419425.1436933315101915", 15, true,
+            UDec128{ 0x5f75348b0131b3b0, 0xb3af0f }, nil },
+        UDec128ParseTC{ "217224419425.1436933315101", 15, false,
+            UDec128{ 0x5f75348b0131b354, 0xb3af0f }, nil },
+        UDec128ParseTC{ "39428394592112", 10, false,
+            UDec128{ 0x2cf00161e4efc000, 0x537e }, nil },
+        UDec128ParseTC{ "348943892891898938943893434921", 11, false,
+            UDec128{}, strconv.ErrRange },
+        UDec128ParseTC{ "0.001984593924556", 15, false,
+            UDec128{ 1984593924556, 0 }, nil },
+        UDec128ParseTC{ ".0019845939245565", 15, false,
+            UDec128{ 1984593924556, 0 }, nil },
+        UDec128ParseTC{ ".0019845939245565", 15, true,
+            UDec128{ 1984593924557, 0 }, nil },
+        UDec128ParseTC{ "0.001984593924560", 15, false,
+            UDec128{ 1984593924560, 0 }, nil },
+        UDec128ParseTC{ ".001984593924560", 15, false,
+            UDec128{ 1984593924560, 0 }, nil },
+        UDec128ParseTC{ "0.00198459392456", 15, false,
+            UDec128{ 1984593924560, 0 }, nil },
+        UDec128ParseTC{ ".00198459392456", 15, false,
+            UDec128{ 1984593924560, 0 }, nil },
+        UDec128ParseTC{ ".001984593924", 15, false,
+            UDec128{ 1984593924000, 0 }, nil },
+        UDec128ParseTC{ "0.201984593924556", 15, false,
+            UDec128{ 201984593924556, 0 }, nil },
+        UDec128ParseTC{ ".30198459392456", 15, false,
+            UDec128{ 301984593924560, 0 }, nil },
+        UDec128ParseTC{ "0.0", 10, false, UDec128{}, nil },
+        UDec128ParseTC{ "0", 10, false, UDec128{}, nil },
+        UDec128ParseTC{ "0.", 10, false, UDec128{}, nil },
+        UDec128ParseTC{ ".0", 10, false, UDec128{}, nil },
+    }
+    for i, tc := range testCases {
+        result, err := ParseUDec128(tc.str, tc.tenPow, tc.rounding)
+        if tc.expected!=result || tc.expError!=err {
+            t.Errorf("Result mismatch: %d: parse(%v)->%v,%v!=%v,%v",
+                     i, tc.str, tc.expected, tc.expError, result, err)
         }
     }
 }
