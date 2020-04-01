@@ -209,3 +209,10 @@ func TestUDec128Cmp(t *testing.T) {
         }
     }
 }
+
+type UDec128Mul struct {
+    a, b UDec128
+    tenPow uint
+    
+    expected UDec128
+}

@@ -148,7 +148,7 @@ func uint128_64DivFullR(hi, lo goint128.UInt128, b uint64,
     return c
 }
 
-func (a UDec128) Mul(b UDec128, tenPow int, rounding bool) UDec128 {
+func (a UDec128) Mul(b UDec128, tenPow uint, rounding bool) UDec128 {
     chi, clo := goint128.UInt128(a).MulFull(goint128.UInt128(b))
     // divide by ten power
     return UDec128(uint128_64DivFullR(chi, clo, uint64_powers[tenPow], rounding))
@@ -173,7 +173,7 @@ func (a UDec128) Shr(b uint) UDec128 {
     return UDec128(goint128.UInt128(a).Shr(b))
 }
 
-func (a UDec128) Div(b UDec128, tenPow int) (UDec128, UDec128) {
+func (a UDec128) Div(b UDec128, tenPow uint) (UDec128, UDec128) {
     // multiply by tenPowers
     chi, clo := goint128.UInt128(a).MulFull(goint128.UInt128{uint64_powers[tenPow], 0})
     q, r := goint128.UInt128DivFull(chi, clo, goint128.UInt128(b))
@@ -194,28 +194,28 @@ func UDec128DivFull(hi, lo, b UDec128) (UDec128, UDec128) {
 
 var zeroPart string = "0.000000000000000000000000000"
 
-func (a UDec128) Format(tenPow int, trimZeroes bool) string {
+func (a UDec128) Format(tenPow uint, trimZeroes bool) string {
     str := goint128.UInt128(a).Format()
     if tenPow==0 { return str }
     slen := len(str)
     i := slen-1
-    if slen <= tenPow {
+    if slen <= int(tenPow) {
         if trimZeroes {
             for ; i>=0; i-- {
                 if str[i]!='0' { break }
             }
         }
-        return zeroPart[:2+tenPow-slen] + str[:i]
+        return zeroPart[:2+int(tenPow)-slen] + str[:i]
     }
     if trimZeroes {
-        for ; i>=tenPow; i-- {
+        for ; i>=int(tenPow); i-- {
             if str[i]!='0' { break }
         }
     }
-    return str[:slen-tenPow]+"."+str[slen-tenPow:i]
+    return str[:slen-int(tenPow)]+"."+str[slen-int(tenPow):i]
 }
 
-func ParseUDec128(str string, tenPow int) (UDec128, error) {
+func ParseUDec128(str string, tenPow uint) (UDec128, error) {
     if tenPow==0 {
         v, err := goint128.ParseUInt128(str)
         return UDec128(v), err
@@ -232,14 +232,14 @@ func ParseUDec128(str string, tenPow int) (UDec128, error) {
         }
         return UDec128(clo), nil
     }
-    if slen-(commaIdx+1) >= tenPow {
+    if slen-(commaIdx+1) >= int(tenPow) {
         //  more than in fraction
-        realSlen := commaIdx+1+tenPow
+        realSlen := commaIdx+1+int(tenPow)
         s2 := str[:commaIdx] + str[commaIdx+1:realSlen]
         v, err := goint128.ParseUInt128(s2)
         if err!=nil { return UDec128{}, err }
         // rounding
-        if realSlen!=slen && str[commaIdx+1+tenPow]>='5' {
+        if realSlen!=slen && str[realSlen]>='5' {
             v = v.Add64(1) // add rounding
         }
         // check last part of string
@@ -254,7 +254,7 @@ func ParseUDec128(str string, tenPow int) (UDec128, error) {
         s2 := str[:commaIdx] + str[commaIdx+1:]
         v, err := goint128.ParseUInt128(s2)
         if err!=nil { return UDec128{}, err }
-        pow10ForVal := tenPow - (slen-(commaIdx+1))
+        pow10ForVal := int(tenPow) - (slen-(commaIdx+1))
         chi, clo := v.MulFull(goint128.UInt128{uint64_powers[pow10ForVal], 0})
         if chi[0]!=0 || chi[1]!=0 {
             return UDec128{}, strconv.ErrRange
