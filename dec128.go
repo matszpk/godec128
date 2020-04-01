@@ -1,7 +1,7 @@
 /*
  * dec128.go - main fixed decimal int128 routines
  *
- * goint128 - go dec128 (for 12-bit decimal fixed point) library
+ * godec128 - go dec128 (for 12-bit decimal fixed point) library
  * Copyright (C) 2019  Mateusz Szpakowski
  *
  * This library is free software; you can redistribute it and/or
