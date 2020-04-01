@@ -20,7 +20,7 @@
  */
 
 // Package to operate on 128-bit decimal fixed point
-package dec128
+package godec128
 
 import (
     "math/bits"
@@ -87,10 +87,8 @@ var uint64_powers []uint64 = []uint64{
 }
 
 func uint128_64DivFullR(hi, lo goint128.UInt128, b uint64,
-                        rounding bool) (goint128.UInt128, goint128.UInt128) {
-    if b==1 {
-        return hi,lo
-    }
+                        rounding bool) goint128.UInt128 {
+    if b==1 { return lo }
     var borrow uint64
     lza := 0
     if hi[0]==0 && hi[1]==0 {
@@ -119,13 +117,10 @@ func uint128_64DivFullR(hi, lo goint128.UInt128, b uint64,
     }
     // main loop
     var tmp goint128.UInt128
-    chi := goint128.UInt128{0,0}
     c := goint128.UInt128{0,0}
     for ; pos>0; pos-- {
         tmp[0], borrow = goint128.Sub64(thi[0], b, 0)
         tmp[1], borrow = goint128.Sub64(thi[1], 0, borrow)
-        chi[1] = (chi[0]>>63) | (chi[1]<<1) // shift
-        chi[0] = (c[1]>>63) | (chi[0]<<1)
         c[1] = (c[0]>>63) | (c[1]<<1) // shift
         c[0] <<= 1
         if borrow==0 {
@@ -148,18 +143,15 @@ func uint128_64DivFullR(hi, lo goint128.UInt128, b uint64,
         c[0] |= 1
     }
     if rounding && thi[0]>=(b>>1) { // rounding
-        var cr uint64
-        c, cr = c.AddC(goint128.UInt128{1, 0}, 0)
-        chi, _ = chi.AddC(goint128.UInt128{}, cr)
+        c = c.Add64(1)
     }
-    return chi, c
+    return c
 }
 
 func (a UDec128) Mul(b UDec128, tenPow int, rounding bool) UDec128 {
     chi, clo := goint128.UInt128(a).MulFull(goint128.UInt128(b))
     // divide by ten power
-    _, clo = uint128_64DivFullR(chi, clo, uint64_powers[tenPow], rounding)
-    return UDec128(clo)
+    return UDec128(uint128_64DivFullR(chi, clo, uint64_powers[tenPow], rounding))
 }
 
 func (a UDec128) Mul64(b uint64) UDec128 {
