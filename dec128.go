@@ -195,22 +195,25 @@ func UDec128DivFull(hi, lo, b UDec128) (UDec128, UDec128) {
 var zeroPart string = "0.000000000000000000000000000"
 
 func (a UDec128) Format(tenPow uint, trimZeroes bool) string {
+    if a[0]==0 && a[1]==0 { return "0.0" }
     str := goint128.UInt128(a).Format()
     if tenPow==0 { return str }
     slen := len(str)
-    i := slen-1
+    i := slen
     if slen <= int(tenPow) {
         if trimZeroes {
-            for ; i>=0; i-- {
+            for i--; i>=0; i-- {
                 if str[i]!='0' { break }
             }
+            i++
         }
         return zeroPart[:2+int(tenPow)-slen] + str[:i]
     }
     if trimZeroes {
-        for ; i>=int(tenPow); i-- {
+        for i--; i>=slen-int(tenPow); i-- {
             if str[i]!='0' { break }
         }
+        i++
     }
     return str[:slen-int(tenPow)]+"."+str[slen-int(tenPow):i]
 }

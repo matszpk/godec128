@@ -533,6 +533,9 @@ func TestUDec128Div(t *testing.T) {
         UDec128DivTC { UDec128{ 0x29d774b64027d71c, 0x50339e89 },
             UDec128{ 0xe1320b466aa1ee71, 0x9c }, 13,
             UDec128{ 0xa64cfe4e65832020, 0x4 }, UDec128{ 0x67b755820e0a91e0, 0x79 } },
+        UDec128DivTC { UDec128{ 0xaea112fccc354d11, 0x46b7da4 },
+            UDec128{ 0xc2fea748532c9056, 0x4b30de }, 10,
+            UDec128{ 0x2309736671, 0 }, UDec128{ 0x38a1b1ab078e2a0a, 0x226d78 } },
     }
     for i, tc := range testCases {
         a, b := tc.a, tc.b
@@ -544,6 +547,57 @@ func TestUDec128Div(t *testing.T) {
         if tc.a!=a || tc.b!=b {
             t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",
                      i, a, b, tc.a, tc.b)
+        }
+    }
+}
+
+type UDec128FmtTC struct {
+    a UDec128
+    tenPow uint
+    trimZeroes bool
+    expected string
+}
+
+func TestUDec128Format(t *testing.T) {
+    testCases := []UDec128FmtTC {
+        UDec128FmtTC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 15, false,
+            "217224419425.143693331510191" },
+        UDec128FmtTC{ UDec128{ 0x5f75348b0131b3b8, 0xb3af0f }, 15, false,
+            "217224419425.143693331510200" },
+        UDec128FmtTC{ UDec128{ 0x5f75348b0131b3b8, 0xb3af0f }, 15, true,
+            "217224419425.1436933315102" },
+        UDec128FmtTC{ UDec128{ 0x5f75348b0131b2f0, 0xb3af0f }, 15, false,
+            "217224419425.143693331510000" },
+        UDec128FmtTC{ UDec128{ 0x5f75348b0131b2f0, 0xb3af0f }, 15, true,
+            "217224419425.14369333151" },
+        UDec128FmtTC{ UDec128{ 1984593924556, 0 }, 15, false,
+            "0.001984593924556" },
+        UDec128FmtTC{ UDec128{ 1984593924560, 0 }, 15, false,
+            "0.001984593924560" },
+        UDec128FmtTC{ UDec128{ 1984593924560, 0 }, 15, true,
+            "0.00198459392456" },
+        UDec128FmtTC{ UDec128{ 1984593924000, 0 }, 15, false,
+            "0.001984593924000" },
+        UDec128FmtTC{ UDec128{ 1984593924000, 0 }, 15, true,
+            "0.001984593924" },
+        UDec128FmtTC{ UDec128{ 0, 0 }, 15, true, "0.0" },
+        UDec128FmtTC{ UDec128{ 1, 0 }, 15, false, "0.000000000000001" },
+        UDec128FmtTC{ UDec128{ 3211984593924556, 0 }, 15, false,
+            "3.211984593924556" },
+        UDec128FmtTC{ UDec128{ 33000000000000000, 0 }, 15, false,
+            "33.000000000000000" },
+        UDec128FmtTC{ UDec128{ 33400000000000000, 0 }, 15, true,
+            "33.4" },
+    }
+    for i, tc := range testCases {
+        a := tc.a
+        result := tc.a.Format(tc.tenPow, tc.trimZeroes)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: fmt(%v)->%v!=%v",
+                     i, tc.a, tc.expected, result)
+        }
+        if tc.a!=a {
+            t.Errorf("Argument has been modified: %d: %v!=%v", i, a, tc.a)
         }
     }
 }
