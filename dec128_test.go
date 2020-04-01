@@ -669,3 +669,67 @@ func TestUDec128Parse(t *testing.T) {
         }
     }
 }
+
+type UDec128ToFloat64TC struct {
+    value UDec128
+    tenPow uint
+    expected float64
+}
+
+func TestUDec128ToFloat64(t *testing.T) {
+    testCases := []UDec128ToFloat64TC{
+        UDec128ToFloat64TC{ UDec128{ 0, 0 }, 11, 0.0 },
+        UDec128ToFloat64TC{ UDec128{ 1, 0 }, 11, 1.0*1e-11 },
+        UDec128ToFloat64TC{ UDec128{ 54930201, 0 }, 11, 54930201.0*1e-11 },
+        UDec128ToFloat64TC{ UDec128{ 85959028918918968, 0 }, 0,
+                    85959028918918968.0 },
+        UDec128ToFloat64TC{ UDec128{ 85959028918918968, 0 }, 11,
+                    85959028918918968.0*1e-11 },
+        UDec128ToFloat64TC{ UDec128{ 85959028918918968, 0 }, 17,
+                    0.8595902891891898 },
+        UDec128ToFloat64TC{ UDec128{ 16346246572275455745, 10277688839402 }, 11,
+                    189589895689685989335661129029377.0*1e-11 },
+        UDec128ToFloat64TC{ UDec128{ 0xffffffffffffffff, 0xffffffffffffffff }, 11,
+                    340282366920938463463374607431768211455.0*1e-11 },
+    }
+    for i, tc := range testCases {
+        result := tc.value.ToFloat64(tc.tenPow)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: tofloat64(%v,%v)->%v!=%v",
+                     i, tc.value, tc.tenPow, tc.expected, result)
+        }
+    }
+}
+
+type Float64ToUDec128TC struct {
+    value float64
+    tenPow uint
+    expected UDec128
+    expError error
+}
+
+func TestFloat64ToUDec128(t *testing.T) {
+    testCases := []Float64ToUDec128TC{
+        Float64ToUDec128TC{ 0.0, 0, UDec128{ 0, 0 }, nil },
+        Float64ToUDec128TC{ 1.0, 0, UDec128{ 1, 0 }, nil },
+        Float64ToUDec128TC{ 1.7, 0, UDec128{ 1, 0 }, nil },
+        Float64ToUDec128TC{ 145645677.18, 0, UDec128{ 145645677, 0 }, nil },
+        Float64ToUDec128TC{ 3145645677.778, 0, UDec128{ 3145645677, 0 }, nil },
+        Float64ToUDec128TC{ 187923786919586921.0, 0,
+            UDec128{ 187923786919586912, 0 }, nil },
+        Float64ToUDec128TC{ 11792378691958692154.0, 0,
+            UDec128{ 11792378691958691840, 0 }, nil },
+        Float64ToUDec128TC{ 26858969188828978177.0, 0,
+            UDec128{ 8412225115119427584, 1 }, nil },
+        Float64ToUDec128TC{ 145645677.18, 3, UDec128{ 145645677180, 0 }, nil },
+        Float64ToUDec128TC{ 58590303.45539292211, 11,
+            UDec128{ 0x514f750e8a1a8c00, 0 }, nil },
+    }
+    for i, tc := range testCases {
+        result, err := Float64ToUDec128(tc.value, tc.tenPow)
+        if tc.expected!=result || tc.expError!=err {
+            t.Errorf("Result mismatch: %d: toudec128(%v)->%v,%v!=%v,%v",
+                     i, tc.value, tc.expected, tc.expError, result, err)
+        }
+    }
+}

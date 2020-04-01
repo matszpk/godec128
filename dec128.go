@@ -84,6 +84,9 @@ var uint64_powers []uint64 = []uint64{
     10000000000000,
     100000000000000,
     1000000000000000,
+    10000000000000000,
+    100000000000000000,
+    1000000000000000000,
 }
 
 func uint128_64DivFullR(hi, lo goint128.UInt128, b uint64,
@@ -284,13 +287,16 @@ var float64_revpowers []float64 = []float64{
     0.0000000000001,
     0.00000000000001,
     0.000000000000001,
+    0.0000000000000001,
+    0.00000000000000001,
+    0.000000000000000001,
 }
 
-func (a UDec128) ToFloat64(tenPow int) float64 {
+func (a UDec128) ToFloat64(tenPow uint) float64 {
     return goint128.UInt128(a).ToFloat64()*float64_revpowers[tenPow]
 }
 
-func Float64ToUDec128(a float64, tenPow int) (UDec128, error) {
+func Float64ToUDec128(a float64, tenPow uint) (UDec128, error) {
     r, err := goint128.Float64ToUInt128(a*float64(uint64_powers[tenPow]))
     return UDec128(r), err
 }
