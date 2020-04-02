@@ -190,4 +190,3 @@ func LocaleParseUDec128Bytes(lang string, strInput []byte,
     }
     return ParseUDec128Bytes(os, tenPow, rounding)
 }
-
