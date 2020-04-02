@@ -517,6 +517,14 @@ func TestUDec128Format(t *testing.T) {
         if tc.a!=a {
             t.Errorf("Argument has been modified: %d: %v!=%v", i, a, tc.a)
         }
+        resultBytes := tc.a.FormatBytes(tc.tenPow, tc.trimZeroes)
+        if tc.expected!=string(resultBytes) {
+            t.Errorf("Result mismatch: %d: fmtBytes(%v)->%v!=%v",
+                     i, tc.a, tc.expected, result)
+        }
+        if tc.a!=a {
+            t.Errorf("Argument has been modified: %d: %v!=%v", i, a, tc.a)
+        }
     }
 }
 
@@ -571,6 +579,11 @@ func TestUDec128Parse(t *testing.T) {
     }
     for i, tc := range testCases {
         result, err := ParseUDec128(tc.str, tc.tenPow, tc.rounding)
+        if tc.expected!=result || tc.expError!=err {
+            t.Errorf("Result mismatch: %d: parse(%v)->%v,%v!=%v,%v",
+                     i, tc.str, tc.expected, tc.expError, result, err)
+        }
+        result, err = ParseUDec128Bytes([]byte(tc.str), tc.tenPow, tc.rounding)
         if tc.expected!=result || tc.expError!=err {
             t.Errorf("Result mismatch: %d: parse(%v)->%v,%v!=%v,%v",
                      i, tc.str, tc.expected, tc.expError, result, err)

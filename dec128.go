@@ -23,6 +23,7 @@
 package godec128
 
 import (
+    "bytes"
     "math/bits"
     "strconv"
     "strings"
@@ -194,12 +195,12 @@ func UDec128DivFull(hi, lo, b UDec128) UDec128 {
     return UDec128(q)
 }
 
-var zeroPart string = "0.000000000000000000000000000"
+var zeroPart []byte = []byte("0.000000000000000000000000000")
 
 func (a UDec128) Format(tenPow uint, trimZeroes bool) string {
     if a[0]==0 && a[1]==0 { return "0.0" }
-    str := goint128.UInt128(a).Format()
-    if tenPow==0 { return str }
+    if tenPow==0 { return goint128.UInt128(a).Format() }
+    str := goint128.UInt128(a).FormatBytes()
     slen := len(str)
     i := slen
     if slen <= int(tenPow) {
@@ -209,7 +210,10 @@ func (a UDec128) Format(tenPow uint, trimZeroes bool) string {
             }
             i++
         }
-        return zeroPart[:2+int(tenPow)-slen] + str[:i]
+        var os strings.Builder
+        os.Write(zeroPart[:2+int(tenPow)-slen])
+        os.Write(str[:i])
+        return os.String()
     }
     if trimZeroes {
         for i--; i>=slen-int(tenPow); i-- {
@@ -217,8 +221,47 @@ func (a UDec128) Format(tenPow uint, trimZeroes bool) string {
         }
         i++
     }
-    return str[:slen-int(tenPow)]+"."+str[slen-int(tenPow):i]
+    var os strings.Builder
+    os.Grow(i)
+    os.Write(str[:slen-int(tenPow)])
+    os.WriteByte('.')
+    os.Write(str[slen-int(tenPow):i])
+    return os.String()
 }
+
+func (a UDec128) FormatBytes(tenPow uint, trimZeroes bool) []byte {
+    if a[0]==0 && a[1]==0 { return zeroPart[:3] }
+    if tenPow==0 { return goint128.UInt128(a).FormatBytes() }
+    str := goint128.UInt128(a).FormatBytes()
+    slen := len(str)
+    i := slen
+    if slen <= int(tenPow) {
+        if trimZeroes {
+            for i--; i>=0; i-- {
+                if str[i]!='0' { break }
+            }
+            i++
+        }
+        l := 2+int(tenPow)-slen
+        os := make([]byte, l+i)
+        copy(os[:l], zeroPart[:l])
+        copy(os[l:], str[:i])
+        return os
+    }
+    if trimZeroes {
+        for i--; i>=slen-int(tenPow); i-- {
+            if str[i]!='0' { break }
+        }
+        i++
+    }
+    os := make([]byte, i+1)
+    l := slen-int(tenPow)
+    copy(os[:l], str[:l])
+    os[l] = '.'
+    copy(os[l+1:], str[slen-int(tenPow):i])
+    return os
+}
+
 
 func ParseUDec128(str string, tenPow uint, rounding bool) (UDec128, error) {
     if tenPow==0 {
@@ -258,6 +301,59 @@ func ParseUDec128(str string, tenPow uint, rounding bool) (UDec128, error) {
         // less than in fraction
         s2 := str[:commaIdx] + str[commaIdx+1:]
         v, err := goint128.ParseUInt128(s2)
+        if err!=nil { return UDec128{}, err }
+        pow10ForVal := int(tenPow) - (slen-(commaIdx+1))
+        chi, clo := v.MulFull(goint128.UInt128{uint64_powers[pow10ForVal], 0})
+        if chi[0]!=0 || chi[1]!=0 {
+            return UDec128{}, strconv.ErrRange
+        }
+        return UDec128(clo), nil
+    }
+    return UDec128{}, nil
+}
+
+func ParseUDec128Bytes(str []byte, tenPow uint, rounding bool) (UDec128, error) {
+    if tenPow==0 {
+        v, err := goint128.ParseUInt128Bytes(str)
+        return UDec128(v), err
+    }
+    slen := len(str)
+    commaIdx := bytes.LastIndexByte(str, '.')
+    if commaIdx==-1 {
+        // comma not found
+        v, err := goint128.ParseUInt128Bytes(str)
+        if err!=nil { return UDec128(v), err }
+        chi, clo := v.MulFull(goint128.UInt128{uint64_powers[tenPow], 0})
+        if chi[0]!=0 || chi[1]!=0 {
+            return UDec128{}, strconv.ErrRange
+        }
+        return UDec128(clo), nil
+    }
+    if slen-(commaIdx+1) >= int(tenPow) {
+        //  more than in fraction
+        realSlen := commaIdx+1+int(tenPow)
+        s2 := make([]byte, realSlen-1)
+        copy(s2[:commaIdx], str[:commaIdx])
+        copy(s2[commaIdx:], str[commaIdx+1:])
+        v, err := goint128.ParseUInt128Bytes(s2)
+        if err!=nil { return UDec128{}, err }
+        // rounding
+        if rounding && realSlen!=slen && str[realSlen]>='5' {
+            v = v.Add64(1) // add rounding
+        }
+        // check last part of string
+        for i:=realSlen; i<slen; i++ {
+            if str[i]<'0' || str[i]>'9' {
+                return UDec128{}, strconv.ErrSyntax
+            }
+        }
+        return UDec128(v), nil
+    } else {
+        // less than in fraction
+        s2 := make([]byte, slen-1)
+        copy(s2[:commaIdx], str[:commaIdx])
+        copy(s2[commaIdx:], str[commaIdx+1:])
+        v, err := goint128.ParseUInt128Bytes(s2)
         if err!=nil { return UDec128{}, err }
         pow10ForVal := int(tenPow) - (slen-(commaIdx+1))
         chi, clo := v.MulFull(goint128.UInt128{uint64_powers[pow10ForVal], 0})
