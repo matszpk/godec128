@@ -30,7 +30,7 @@ type UDec128LocTC struct {
     lang string
     noSep1000 bool
     a UDec128
-    tenPow uint
+    precision uint
     trimZeroes bool
     expected string
 }
@@ -217,19 +217,19 @@ func TestUDec128LocaleFormat(t *testing.T) {
     }
     for i, tc := range testCases {
         a := tc.a
-        result := tc.a.LocaleFormat(tc.lang, tc.tenPow, tc.trimZeroes, tc.noSep1000)
+        result := tc.a.LocaleFormat(tc.lang, tc.precision, tc.trimZeroes, tc.noSep1000)
         if tc.expected!=result {
             t.Errorf("Result mismatch: %d: fmt(%v,%s,%v,%v)->%v!=%v",
-                     i, tc.a, tc.lang, tc.tenPow, tc.trimZeroes, tc.expected, result)
+                     i, tc.a, tc.lang, tc.precision, tc.trimZeroes, tc.expected, result)
         }
         if tc.a!=a {
             t.Errorf("Argument has been modified: %d %s: %v!=%v", i, tc.lang, a, tc.a)
         }
-        resultBytes := tc.a.LocaleFormatBytes(tc.lang, tc.tenPow,
+        resultBytes := tc.a.LocaleFormatBytes(tc.lang, tc.precision,
                         tc.trimZeroes, tc.noSep1000)
         if tc.expected!=string(resultBytes) {
             t.Errorf("Result mismatch: %d: fmtBytes(%v,%s,%v,%v)->%v!=%v",
-                     i, tc.a, tc.lang, tc.tenPow, tc.trimZeroes, tc.expected, result)
+                     i, tc.a, tc.lang, tc.precision, tc.trimZeroes, tc.expected, result)
         }
         if tc.a!=a {
             t.Errorf("Argument has been modified: %d %s: %v!=%v", i, tc.lang, a, tc.a)
@@ -240,7 +240,7 @@ func TestUDec128LocaleFormat(t *testing.T) {
 type UDec128LocParseTC struct {
     lang string
     str string
-    tenPow uint
+    precision uint
     rounding bool
     expected UDec128
     expError error
@@ -267,17 +267,17 @@ func TestUDec128LocaleParse(t *testing.T) {
                 UDec128{0xab54a98ceb1f0ad3,0}, nil },
     }
     for i, tc := range testCases {
-        result, err := LocaleParseUDec128(tc.lang, tc.str, tc.tenPow, tc.rounding)
+        result, err := LocaleParseUDec128(tc.lang, tc.str, tc.precision, tc.rounding)
         if tc.expected!=result || tc.expError!=err {
             t.Errorf("Result mismatch: %d: parse(%v,%v,%v,%v)->%v,%v!=%v,%v",
-                     i, tc.lang, tc.str, tc.tenPow, tc.rounding,
+                     i, tc.lang, tc.str, tc.precision, tc.rounding,
                      tc.expected, tc.expError, result, err)
         }
         result, err = LocaleParseUDec128Bytes(tc.lang, []byte(tc.str),
-                                tc.tenPow, tc.rounding)
+                                tc.precision, tc.rounding)
         if tc.expected!=result || tc.expError!=err {
             t.Errorf("Result mismatch: %d: parseBytes(%v,%v,%v,%v)->%v,%v!=%v,%v",
-                     i, tc.lang, tc.str, tc.tenPow, tc.rounding,
+                     i, tc.lang, tc.str, tc.precision, tc.rounding,
                      tc.expected, tc.expError, result, err)
         }
     }

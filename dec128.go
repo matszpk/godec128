@@ -145,10 +145,10 @@ func uint128_64DivFullR(hi, lo goint128.UInt128, b uint64,
 }
 
 // multiply 128-bit decimal fixed points and return lower 128 bits value
-func (a UDec128) Mul(b UDec128, tenPow uint, rounding bool) UDec128 {
+func (a UDec128) Mul(b UDec128, precision uint, rounding bool) UDec128 {
     chi, clo := goint128.UInt128(a).MulFull(goint128.UInt128(b))
     // divide by ten power
-    return UDec128(uint128_64DivFullR(chi, clo, uint64_powers[tenPow], rounding))
+    return UDec128(uint128_64DivFullR(chi, clo, uint64_powers[precision], rounding))
 }
 
 // multiply 128-bit decimal fixed point and 64-bit unsigned integer and
@@ -158,7 +158,7 @@ func (a UDec128) Mul64(b uint64) UDec128 {
 }
 
 // multiply 128-bit decimal fixed point and return high and lower product
-// integer part is multiplied by 10**tenPow
+// integer part is multiplied by 10**precision
 func (a UDec128) MulFull(b UDec128) (UDec128, UDec128) {
     chi, clo := goint128.UInt128(a).MulFull(goint128.UInt128(b))
     return UDec128(chi), UDec128(clo)
@@ -175,9 +175,9 @@ func (a UDec128) Shr(b uint) UDec128 {
 }
 
 // divide 128-bit decimal fixed points
-func (a UDec128) Div(b UDec128, tenPow uint) UDec128 {
-    // multiply by tenPowers
-    chi, clo := goint128.UInt128(a).MulFull(goint128.UInt128{uint64_powers[tenPow], 0})
+func (a UDec128) Div(b UDec128, precision uint) UDec128 {
+    // multiply by precisioners
+    chi, clo := goint128.UInt128(a).MulFull(goint128.UInt128{uint64_powers[precision], 0})
     q, _ := goint128.UInt128DivFull(chi, clo, goint128.UInt128(b))
     return UDec128(q)
 }
@@ -188,7 +188,7 @@ func (a UDec128) Div64(b uint64) UDec128 {
     return UDec128(q)
 }
 
-// fixed point is in 10**(tenPow*2)
+// fixed point is in 10**(precision*2)
 func UDec128DivFull(hi, lo, b UDec128) UDec128 {
     q, _ := goint128.UInt128DivFull(goint128.UInt128(hi), goint128.UInt128(lo),
                                     goint128.UInt128(b))
@@ -197,13 +197,13 @@ func UDec128DivFull(hi, lo, b UDec128) UDec128 {
 
 var zeroPart []byte = []byte("0.000000000000000000000000000")
 
-func (a UDec128) Format(tenPow uint, trimZeroes bool) string {
+func (a UDec128) Format(precision uint, trimZeroes bool) string {
     if a[0]==0 && a[1]==0 { return "0.0" }
-    if tenPow==0 { return goint128.UInt128(a).Format() }
+    if precision==0 { return goint128.UInt128(a).Format() }
     str := goint128.UInt128(a).FormatBytes()
     slen := len(str)
     i := slen
-    if slen <= int(tenPow) {
+    if slen <= int(precision) {
         if trimZeroes {
             for i--; i>=0; i-- {
                 if str[i]!='0' { break }
@@ -211,60 +211,60 @@ func (a UDec128) Format(tenPow uint, trimZeroes bool) string {
             i++
         }
         var os strings.Builder
-        os.Write(zeroPart[:2+int(tenPow)-slen])
+        os.Write(zeroPart[:2+int(precision)-slen])
         os.Write(str[:i])
         return os.String()
     }
     if trimZeroes {
-        for i--; i>=slen-int(tenPow); i-- {
+        for i--; i>=slen-int(precision); i-- {
             if str[i]!='0' { break }
         }
         i++
     }
     var os strings.Builder
     os.Grow(i)
-    os.Write(str[:slen-int(tenPow)])
+    os.Write(str[:slen-int(precision)])
     os.WriteByte('.')
-    os.Write(str[slen-int(tenPow):i])
+    os.Write(str[slen-int(precision):i])
     return os.String()
 }
 
-func (a UDec128) FormatBytes(tenPow uint, trimZeroes bool) []byte {
+func (a UDec128) FormatBytes(precision uint, trimZeroes bool) []byte {
     if a[0]==0 && a[1]==0 { return zeroPart[:3] }
-    if tenPow==0 { return goint128.UInt128(a).FormatBytes() }
+    if precision==0 { return goint128.UInt128(a).FormatBytes() }
     str := goint128.UInt128(a).FormatBytes()
     slen := len(str)
     i := slen
-    if slen <= int(tenPow) {
+    if slen <= int(precision) {
         if trimZeroes {
             for i--; i>=0; i-- {
                 if str[i]!='0' { break }
             }
             i++
         }
-        l := 2+int(tenPow)-slen
+        l := 2+int(precision)-slen
         os := make([]byte, l+i)
         copy(os[:l], zeroPart[:l])
         copy(os[l:], str[:i])
         return os
     }
     if trimZeroes {
-        for i--; i>=slen-int(tenPow); i-- {
+        for i--; i>=slen-int(precision); i-- {
             if str[i]!='0' { break }
         }
         i++
     }
     os := make([]byte, i+1)
-    l := slen-int(tenPow)
+    l := slen-int(precision)
     copy(os[:l], str[:l])
     os[l] = '.'
-    copy(os[l+1:], str[slen-int(tenPow):i])
+    copy(os[l+1:], str[slen-int(precision):i])
     return os
 }
 
 
-func ParseUDec128(str string, tenPow uint, rounding bool) (UDec128, error) {
-    if tenPow==0 {
+func ParseUDec128(str string, precision uint, rounding bool) (UDec128, error) {
+    if precision==0 {
         v, err := goint128.ParseUInt128(str)
         return UDec128(v), err
     }
@@ -274,15 +274,15 @@ func ParseUDec128(str string, tenPow uint, rounding bool) (UDec128, error) {
         // comma not found
         v, err := goint128.ParseUInt128(str)
         if err!=nil { return UDec128(v), err }
-        chi, clo := v.MulFull(goint128.UInt128{uint64_powers[tenPow], 0})
+        chi, clo := v.MulFull(goint128.UInt128{uint64_powers[precision], 0})
         if chi[0]!=0 || chi[1]!=0 {
             return UDec128{}, strconv.ErrRange
         }
         return UDec128(clo), nil
     }
-    if slen-(commaIdx+1) >= int(tenPow) {
+    if slen-(commaIdx+1) >= int(precision) {
         //  more than in fraction
-        realSlen := commaIdx+1+int(tenPow)
+        realSlen := commaIdx+1+int(precision)
         s2 := str[:commaIdx] + str[commaIdx+1:realSlen]
         v, err := goint128.ParseUInt128(s2)
         if err!=nil { return UDec128{}, err }
@@ -302,7 +302,7 @@ func ParseUDec128(str string, tenPow uint, rounding bool) (UDec128, error) {
         s2 := str[:commaIdx] + str[commaIdx+1:]
         v, err := goint128.ParseUInt128(s2)
         if err!=nil { return UDec128{}, err }
-        pow10ForVal := int(tenPow) - (slen-(commaIdx+1))
+        pow10ForVal := int(precision) - (slen-(commaIdx+1))
         chi, clo := v.MulFull(goint128.UInt128{uint64_powers[pow10ForVal], 0})
         if chi[0]!=0 || chi[1]!=0 {
             return UDec128{}, strconv.ErrRange
@@ -312,8 +312,8 @@ func ParseUDec128(str string, tenPow uint, rounding bool) (UDec128, error) {
     return UDec128{}, nil
 }
 
-func ParseUDec128Bytes(str []byte, tenPow uint, rounding bool) (UDec128, error) {
-    if tenPow==0 {
+func ParseUDec128Bytes(str []byte, precision uint, rounding bool) (UDec128, error) {
+    if precision==0 {
         v, err := goint128.ParseUInt128Bytes(str)
         return UDec128(v), err
     }
@@ -323,15 +323,15 @@ func ParseUDec128Bytes(str []byte, tenPow uint, rounding bool) (UDec128, error) 
         // comma not found
         v, err := goint128.ParseUInt128Bytes(str)
         if err!=nil { return UDec128(v), err }
-        chi, clo := v.MulFull(goint128.UInt128{uint64_powers[tenPow], 0})
+        chi, clo := v.MulFull(goint128.UInt128{uint64_powers[precision], 0})
         if chi[0]!=0 || chi[1]!=0 {
             return UDec128{}, strconv.ErrRange
         }
         return UDec128(clo), nil
     }
-    if slen-(commaIdx+1) >= int(tenPow) {
+    if slen-(commaIdx+1) >= int(precision) {
         //  more than in fraction
-        realSlen := commaIdx+1+int(tenPow)
+        realSlen := commaIdx+1+int(precision)
         s2 := make([]byte, realSlen-1)
         copy(s2[:commaIdx], str[:commaIdx])
         copy(s2[commaIdx:], str[commaIdx+1:])
@@ -355,7 +355,7 @@ func ParseUDec128Bytes(str []byte, tenPow uint, rounding bool) (UDec128, error) 
         copy(s2[commaIdx:], str[commaIdx+1:])
         v, err := goint128.ParseUInt128Bytes(s2)
         if err!=nil { return UDec128{}, err }
-        pow10ForVal := int(tenPow) - (slen-(commaIdx+1))
+        pow10ForVal := int(precision) - (slen-(commaIdx+1))
         chi, clo := v.MulFull(goint128.UInt128{uint64_powers[pow10ForVal], 0})
         if chi[0]!=0 || chi[1]!=0 {
             return UDec128{}, strconv.ErrRange
@@ -387,11 +387,11 @@ var float64_revpowers []float64 = []float64{
     0.000000000000000001,
 }
 
-func (a UDec128) ToFloat64(tenPow uint) float64 {
-    return goint128.UInt128(a).ToFloat64()*float64_revpowers[tenPow]
+func (a UDec128) ToFloat64(precision uint) float64 {
+    return goint128.UInt128(a).ToFloat64()*float64_revpowers[precision]
 }
 
-func Float64ToUDec128(a float64, tenPow uint) (UDec128, error) {
-    r, err := goint128.Float64ToUInt128(a*float64(uint64_powers[tenPow]))
+func Float64ToUDec128(a float64, precision uint) (UDec128, error) {
+    r, err := goint128.Float64ToUInt128(a*float64(uint64_powers[precision]))
     return UDec128(r), err
 }

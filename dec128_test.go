@@ -185,7 +185,7 @@ func TestUDec128Cmp(t *testing.T) {
 
 type UDec128MulTC struct {
     a, b UDec128
-    tenPow uint
+    precision uint
     rounding bool
     expected UDec128
 }
@@ -210,10 +210,10 @@ func TestUDec128Mul(t *testing.T) {
     }
     for i, tc := range testCases {
         a, b := tc.a, tc.b
-        result := tc.a.Mul(tc.b, tc.tenPow, tc.rounding)
+        result := tc.a.Mul(tc.b, tc.precision, tc.rounding)
         if tc.expected!=result {
             t.Errorf("Result mismatch: %d: mul(%v,%v,%v,%v)->%v!=%v",
-                     i, tc.a, tc.b, tc.tenPow, tc.rounding, tc.expected, result)
+                     i, tc.a, tc.b, tc.precision, tc.rounding, tc.expected, result)
         }
         if tc.a!=a || tc.b!=b {
             t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",
@@ -435,7 +435,7 @@ func TestUDec128DivFull(t *testing.T) {
 
 type UDec128DivTC struct {
     a, b UDec128
-    tenPow uint
+    precision uint
     expected UDec128
 }
 
@@ -448,10 +448,10 @@ func TestUDec128Div(t *testing.T) {
     }
     for i, tc := range testCases {
         a, b := tc.a, tc.b
-        result := tc.a.Div(tc.b, tc.tenPow)
+        result := tc.a.Div(tc.b, tc.precision)
         if tc.expected!=result {
             t.Errorf("Result mismatch: %d: div(%v,%v,%v)->%v!=%v",
-                     i, tc.a, tc.b, tc.tenPow, tc.expected, result)
+                     i, tc.a, tc.b, tc.precision, tc.expected, result)
         }
         if tc.a!=a || tc.b!=b {
             t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",
@@ -462,7 +462,7 @@ func TestUDec128Div(t *testing.T) {
 
 type UDec128FmtTC struct {
     a UDec128
-    tenPow uint
+    precision uint
     trimZeroes bool
     expected string
 }
@@ -509,7 +509,7 @@ func TestUDec128Format(t *testing.T) {
     }
     for i, tc := range testCases {
         a := tc.a
-        result := tc.a.Format(tc.tenPow, tc.trimZeroes)
+        result := tc.a.Format(tc.precision, tc.trimZeroes)
         if tc.expected!=result {
             t.Errorf("Result mismatch: %d: fmt(%v)->%v!=%v",
                      i, tc.a, tc.expected, result)
@@ -517,7 +517,7 @@ func TestUDec128Format(t *testing.T) {
         if tc.a!=a {
             t.Errorf("Argument has been modified: %d: %v!=%v", i, a, tc.a)
         }
-        resultBytes := tc.a.FormatBytes(tc.tenPow, tc.trimZeroes)
+        resultBytes := tc.a.FormatBytes(tc.precision, tc.trimZeroes)
         if tc.expected!=string(resultBytes) {
             t.Errorf("Result mismatch: %d: fmtBytes(%v)->%v!=%v",
                      i, tc.a, tc.expected, result)
@@ -530,7 +530,7 @@ func TestUDec128Format(t *testing.T) {
 
 type UDec128ParseTC struct {
     str string
-    tenPow uint
+    precision uint
     rounding bool
     expected UDec128
     expError error
@@ -578,12 +578,12 @@ func TestUDec128Parse(t *testing.T) {
         UDec128ParseTC{ ".0", 10, false, UDec128{}, nil },
     }
     for i, tc := range testCases {
-        result, err := ParseUDec128(tc.str, tc.tenPow, tc.rounding)
+        result, err := ParseUDec128(tc.str, tc.precision, tc.rounding)
         if tc.expected!=result || tc.expError!=err {
             t.Errorf("Result mismatch: %d: parse(%v)->%v,%v!=%v,%v",
                      i, tc.str, tc.expected, tc.expError, result, err)
         }
-        result, err = ParseUDec128Bytes([]byte(tc.str), tc.tenPow, tc.rounding)
+        result, err = ParseUDec128Bytes([]byte(tc.str), tc.precision, tc.rounding)
         if tc.expected!=result || tc.expError!=err {
             t.Errorf("Result mismatch: %d: parse(%v)->%v,%v!=%v,%v",
                      i, tc.str, tc.expected, tc.expError, result, err)
@@ -593,7 +593,7 @@ func TestUDec128Parse(t *testing.T) {
 
 type UDec128ToFloat64TC struct {
     value UDec128
-    tenPow uint
+    precision uint
     expected float64
 }
 
@@ -614,17 +614,17 @@ func TestUDec128ToFloat64(t *testing.T) {
                     340282366920938463463374607431768211455.0*1e-11 },
     }
     for i, tc := range testCases {
-        result := tc.value.ToFloat64(tc.tenPow)
+        result := tc.value.ToFloat64(tc.precision)
         if tc.expected!=result {
             t.Errorf("Result mismatch: %d: tofloat64(%v,%v)->%v!=%v",
-                     i, tc.value, tc.tenPow, tc.expected, result)
+                     i, tc.value, tc.precision, tc.expected, result)
         }
     }
 }
 
 type Float64ToUDec128TC struct {
     value float64
-    tenPow uint
+    precision uint
     expected UDec128
     expError error
 }
@@ -647,7 +647,7 @@ func TestFloat64ToUDec128(t *testing.T) {
             UDec128{ 0x514f750e8a1a8c00, 0 }, nil },
     }
     for i, tc := range testCases {
-        result, err := Float64ToUDec128(tc.value, tc.tenPow)
+        result, err := Float64ToUDec128(tc.value, tc.precision)
         if tc.expected!=result || tc.expError!=err {
             t.Errorf("Result mismatch: %d: toudec128(%v)->%v,%v!=%v,%v",
                      i, tc.value, tc.expected, tc.expError, result, err)

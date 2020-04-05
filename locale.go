@@ -31,10 +31,10 @@ import (
 )
 
 // format 128-bit decimal fixed point including locale
-func (a UDec128) LocaleFormatBytes(lang string, tenPow uint,
+func (a UDec128) LocaleFormatBytes(lang string, precision uint,
                                 trimZeroes, noSep1000 bool) []byte {
     l := goint128.GetLocFmt(lang)
-    s := a.FormatBytes(tenPow, trimZeroes)
+    s := a.FormatBytes(precision, trimZeroes)
     var os bytes.Buffer
     slen := len(s)
     os.Grow(slen*3)
@@ -80,9 +80,9 @@ func (a UDec128) LocaleFormatBytes(lang string, tenPow uint,
 }
 
 // format 128-bit decimal fixed point including locale
-func (a UDec128) LocaleFormat(lang string, tenPow uint, trimZeroes, noSep1000 bool) string {
+func (a UDec128) LocaleFormat(lang string, precision uint, trimZeroes, noSep1000 bool) string {
     l := goint128.GetLocFmt(lang)
-    s := a.FormatBytes(tenPow, trimZeroes)
+    s := a.FormatBytes(precision, trimZeroes)
     var os strings.Builder
     slen := len(s)
     os.Grow(slen*3)
@@ -128,7 +128,7 @@ func (a UDec128) LocaleFormat(lang string, tenPow uint, trimZeroes, noSep1000 bo
 }
 
 // parse decimal fixed point from string and return value and error (nil if no error)
-func LocaleParseUDec128(lang, str string, tenPow uint, rounding bool) (UDec128, error) {
+func LocaleParseUDec128(lang, str string, precision uint, rounding bool) (UDec128, error) {
     l := goint128.GetLocFmt(lang)
     if len(str)==0 { return UDec128{}, strconv.ErrSyntax }
     
@@ -154,12 +154,12 @@ func LocaleParseUDec128(lang, str string, tenPow uint, rounding bool) (UDec128, 
         }
         // otherwise skip sep1000
     }
-    return ParseUDec128Bytes(os, tenPow, rounding)
+    return ParseUDec128Bytes(os, precision, rounding)
 }
 
 // parse decimal fixed point from string and return value and error (nil if no error)
 func LocaleParseUDec128Bytes(lang string, strInput []byte,
-                             tenPow uint, rounding bool) (UDec128, error) {
+                             precision uint, rounding bool) (UDec128, error) {
     l := goint128.GetLocFmt(lang)
     if len(strInput)==0 { return UDec128{}, strconv.ErrSyntax }
     
@@ -188,5 +188,5 @@ func LocaleParseUDec128Bytes(lang string, strInput []byte,
         // otherwise skip sep1000
         str = str[size:]
     }
-    return ParseUDec128Bytes(os, tenPow, rounding)
+    return ParseUDec128Bytes(os, precision, rounding)
 }
