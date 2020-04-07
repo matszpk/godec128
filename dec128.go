@@ -269,6 +269,69 @@ func ParseUDec128(str string, precision uint, rounding bool) (UDec128, error) {
         return UDec128(v), err
     }
     slen := len(str)
+    epos := strings.LastIndexByte(str, 'e')
+    if epos!=-1 {
+        // parse exponent
+        if epos+1==slen {
+            return UDec128{}, strconv.ErrSyntax
+        }
+        // sign of exponent
+        endOfMantisa := epos
+        epos++
+        exponent, err := strconv.ParseInt(str[epos:], 10, 8)
+        if err!=nil { return UDec128{}, err }
+        
+        if exponent!=0 {
+            mantisa := str[:endOfMantisa]
+            commaPos := strings.IndexByte(mantisa, '.')
+            // move comma
+            if commaPos==-1 { commaPos = endOfMantisa }
+            
+            newCommaPos := commaPos + int(exponent)
+            
+            i := 0
+            for ; str[i]=='0' || str[i]=='.'; i++ {
+                if str[i]=='.' { continue }
+                newCommaPos--
+            } // skip first zero
+            //fmt.Println("NewCommaPos:", newCommaPos, commaPos, exponent, i)
+            var sb strings.Builder
+            // add zeroes
+            if newCommaPos<0 {
+                sb.WriteRune('.')
+                for ; newCommaPos<0;  newCommaPos++ {
+                    sb.WriteRune('0')
+                }
+            } else if newCommaPos>0 {
+                for ; newCommaPos>0;  newCommaPos-- {
+                    if str[i]=='.' { i++ }
+                    if i<endOfMantisa {
+                        sb.WriteByte(str[i])
+                        i++
+                    } else {
+                        sb.WriteRune('0')
+                    }
+                }
+                if i<endOfMantisa {
+                    sb.WriteRune('.') // append new comma
+                }
+            }
+            // to end of mantisa
+            for ; i<endOfMantisa; i++ {
+                if str[i]=='.' { i++ }
+                if i<endOfMantisa { sb.WriteByte(str[i]) }
+            }
+            
+            //fmt.Println("new str:", sb.String())
+            str = sb.String()
+            slen = len(str)
+            if slen==0 { return UDec128{}, nil }
+        } else {
+            str = str[:endOfMantisa]
+            slen = len(str)
+        }
+    }
+    
     commaIdx := strings.LastIndexByte(str, '.')
     if commaIdx==-1 {
         // comma not found
@@ -317,7 +380,71 @@ func ParseUDec128Bytes(str []byte, precision uint, rounding bool) (UDec128, erro
         v, err := goint128.ParseUInt128Bytes(str)
         return UDec128(v), err
     }
+    
     slen := len(str)
+    epos := bytes.LastIndexByte(str, 'e')
+    if epos!=-1 {
+        // parse exponent
+        if epos+1==slen {
+            return UDec128{}, strconv.ErrSyntax
+        }
+        // sign of exponent
+        endOfMantisa := epos
+        epos++
+        exponent, err := strconv.ParseInt(string(str[epos:]), 10, 8)
+        if err!=nil { return UDec128{}, err }
+        
+        if exponent!=0 {
+            mantisa := str[:endOfMantisa]
+            commaPos := bytes.IndexByte(mantisa, '.')
+            // move comma
+            if commaPos==-1 { commaPos = endOfMantisa }
+            
+            newCommaPos := commaPos + int(exponent)
+            
+            i := 0
+            for ; str[i]=='0' || str[i]=='.'; i++ {
+                if str[i]=='.' { continue }
+                newCommaPos--
+            } // skip first zero
+            //fmt.Println("NewCommaPos:", newCommaPos, commaPos, exponent, i)
+            var sb bytes.Buffer
+            // add zeroes
+            if newCommaPos<0 {
+                sb.WriteRune('.')
+                for ; newCommaPos<0;  newCommaPos++ {
+                    sb.WriteRune('0')
+                }
+            } else if newCommaPos>0 {
+                for ; newCommaPos>0;  newCommaPos-- {
+                    if str[i]=='.' { i++ }
+                    if i<endOfMantisa {
+                        sb.WriteByte(str[i])
+                        i++
+                    } else {
+                        sb.WriteRune('0')
+                    }
+                }
+                if i<endOfMantisa {
+                    sb.WriteRune('.') // append new comma
+                }
+            }
+            // to end of mantisa
+            for ; i<endOfMantisa; i++ {
+                if str[i]=='.' { i++ }
+                if i<endOfMantisa { sb.WriteByte(str[i]) }
+            }
+            
+            //fmt.Println("new str:", sb.String())
+            str = sb.Bytes()
+            slen = len(str)
+            if slen==0 { return UDec128{}, nil }
+        } else {
+            str = str[:endOfMantisa]
+            slen = len(str)
+        }
+    }
+    
     commaIdx := bytes.LastIndexByte(str, '.')
     if commaIdx==-1 {
         // comma not found
