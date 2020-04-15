@@ -282,3 +282,17 @@ func TestUDec128LocaleParse(t *testing.T) {
         }
     }
 }
+
+func BenchmarkUDec128LocaleFormatBytes(b *testing.B) {
+    a := UDec128{ 7341542494928938945, 938491 }
+    for i := 0; i < b.N; i++ {
+        a.LocaleFormatBytes("pl", 8, false, false)
+    }
+}
+
+func BenchmarkUDec128LocaleFormat(b *testing.B) {
+    a := UDec128{ 7341542494928938945, 938491 }
+    for i := 0; i < b.N; i++ {
+        a.LocaleFormat("pl", 8, false, false)
+    }
+}

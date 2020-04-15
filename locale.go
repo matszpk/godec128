@@ -35,9 +35,9 @@ func (a UDec128) LocaleFormatBytes(lang string, precision uint,
                                 trimZeroes, noSep1000 bool) []byte {
     l := goint128.GetLocFmt(lang)
     s := a.FormatBytes(precision, trimZeroes)
-    var os bytes.Buffer
     slen := len(s)
-    os.Grow(slen*3)
+    os := make([]byte, slen<<1) // optimization
+    oslen := 0
     commaIdx := bytes.LastIndexByte(s, '.')
     if commaIdx==-1 {
         commaIdx = slen
@@ -51,19 +51,28 @@ func (a UDec128) LocaleFormatBytes(lang string, precision uint,
     for k:=0; k < commaIdx; k++ {
         r := s[k]
         if r>='0' && r<='9' {
-            os.WriteRune(l.Digits[r-'0'])
+            if oslen+4 >= len(os) {
+                os = append(os, 0,0,0,0)
+            }
+            oslen += utf8.EncodeRune(os[oslen:], l.Digits[r-'0'])
         }
         if !noSep1000 && i!=1 {
             if !l.Sep100and1000 || ti<=3 {
                 ti--
                 if ti==0 {
-                    os.WriteRune(l.Sep1000)
+                    if oslen+4 >= len(os) {
+                        os = append(os, 0,0,0,0)
+                    }
+                    oslen += utf8.EncodeRune(os[oslen:], l.Sep1000)
                     ti = 3
                 }
             } else {
                 ti--
                 if (ti-3)&1==0 {
-                    os.WriteRune(l.Sep1000)
+                    if oslen+4 >= len(os) {
+                        os = append(os, 0,0,0,0)
+                    }
+                    oslen += utf8.EncodeRune(os[oslen:], l.Sep1000)
                 }
             }
         }
@@ -71,12 +80,18 @@ func (a UDec128) LocaleFormatBytes(lang string, precision uint,
     }
     // comma
     if commaIdx!=slen {
-        os.WriteRune(l.Comma)
+        if oslen+4 >= len(os) {
+            os = append(os, 0,0,0,0)
+        }
+        oslen += utf8.EncodeRune(os[oslen:], l.Comma)
         for i = commaIdx+1; i < slen; i++ {
-            os.WriteRune(l.Digits[s[i]-'0'])
+            if oslen+4 >= len(os) {
+                os = append(os, 0,0,0,0)
+            }
+            oslen += utf8.EncodeRune(os[oslen:], l.Digits[s[i]-'0'])
         }
     }
-    return os.Bytes()
+    return os[:oslen]
 }
 
 // format 128-bit decimal fixed point including locale
