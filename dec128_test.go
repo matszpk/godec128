@@ -467,6 +467,14 @@ type UDec128FmtTC struct {
     expected string
 }
 
+type UDec128Fmt2TC struct {
+    a UDec128
+    precision uint
+    dispPrecision uint
+    trimZeroes bool
+    expected string
+}
+
 func TestUDec128Format(t *testing.T) {
     testCases := []UDec128FmtTC {
         UDec128FmtTC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 15, false,
@@ -520,7 +528,33 @@ func TestUDec128Format(t *testing.T) {
         resultBytes := tc.a.FormatBytes(tc.precision, tc.trimZeroes)
         if tc.expected!=string(resultBytes) {
             t.Errorf("Result mismatch: %d: fmtBytes(%v)->%v!=%v",
+                     i, tc.a, tc.expected, string(resultBytes))
+        }
+        if tc.a!=a {
+            t.Errorf("Argument has been modified: %d: %v!=%v", i, a, tc.a)
+        }
+    }
+    
+    testCases2 := []UDec128Fmt2TC {
+        UDec128Fmt2TC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 15, 17, false,
+            "217224419425.14369333151019100" },
+        UDec128Fmt2TC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 15, 12, false,
+            "217224419425.143693331510" },
+    }
+    for i, tc := range testCases2 {
+        a := tc.a
+        result := tc.a.FormatNew(tc.precision, tc.dispPrecision, tc.trimZeroes)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: fmt(%v)->%v!=%v",
                      i, tc.a, tc.expected, result)
+        }
+        if tc.a!=a {
+            t.Errorf("Argument has been modified: %d: %v!=%v", i, a, tc.a)
+        }
+        resultBytes := tc.a.FormatNewBytes(tc.precision, tc.dispPrecision, tc.trimZeroes)
+        if tc.expected!=string(resultBytes) {
+            t.Errorf("Result mismatch: %d: fmtBytes(%v)->%v!=%v",
+                     i, tc.a, tc.expected, string(resultBytes))
         }
         if tc.a!=a {
             t.Errorf("Argument has been modified: %d: %v!=%v", i, a, tc.a)

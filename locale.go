@@ -31,10 +31,10 @@ import (
 )
 
 // format 128-bit decimal fixed point including locale
-func (a UDec128) LocaleFormatBytes(lang string, precision uint,
+func (a UDec128) LocaleFormatNewBytes(lang string, precision, displayPrecision uint,
                                 trimZeroes, noSep1000 bool) []byte {
     l := goint128.GetLocFmt(lang)
-    s := a.FormatBytes(precision, trimZeroes)
+    s := a.FormatNewBytes(precision, displayPrecision, trimZeroes)
     slen := len(s)
     os := make([]byte, slen<<1) // optimization
     oslen := 0
@@ -94,10 +94,16 @@ func (a UDec128) LocaleFormatBytes(lang string, precision uint,
     return os[:oslen]
 }
 
+func (a UDec128) LocaleFormatBytes(lang string, precision uint,
+                                trimZeroes, noSep1000 bool) []byte {
+    return a.LocaleFormatNewBytes(lang, precision, precision, trimZeroes, noSep1000)
+}
+
 // format 128-bit decimal fixed point including locale
-func (a UDec128) LocaleFormat(lang string, precision uint, trimZeroes, noSep1000 bool) string {
+func (a UDec128) LocaleFormatNew(lang string, precision, displayPrecision uint,
+                            trimZeroes, noSep1000 bool) string {
     l := goint128.GetLocFmt(lang)
-    s := a.FormatBytes(precision, trimZeroes)
+    s := a.FormatNewBytes(precision, displayPrecision, trimZeroes)
     var os strings.Builder
     slen := len(s)
     os.Grow(slen*3)
@@ -140,6 +146,11 @@ func (a UDec128) LocaleFormat(lang string, precision uint, trimZeroes, noSep1000
         }
     }
     return os.String()
+}
+
+func (a UDec128) LocaleFormat(lang string, precision uint,
+                            trimZeroes, noSep1000 bool) string {
+    return a.LocaleFormatNew(lang, precision, precision, trimZeroes, noSep1000)
 }
 
 // parse decimal fixed point from string and return value and error (nil if no error)

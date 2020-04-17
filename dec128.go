@@ -197,7 +197,7 @@ func UDec128DivFull(hi, lo, b UDec128) UDec128 {
 
 var zeroPart []byte = []byte("0.000000000000000000000000000")
 
-func (a UDec128) Format(precision uint, trimZeroes bool) string {
+func (a UDec128) FormatNew(precision, displayPrecision uint, trimZeroes bool) string {
     if a[0]==0 && a[1]==0 { return "0.0" }
     if precision==0 { return goint128.UInt128(a).Format() }
     str := goint128.UInt128(a).FormatBytes()
@@ -225,11 +225,25 @@ func (a UDec128) Format(precision uint, trimZeroes bool) string {
     os.Grow(i)
     os.Write(str[:slen-int(precision)])
     os.WriteByte('.')
-    os.Write(str[slen-int(precision):i])
+    if trimZeroes || precision==displayPrecision {
+        os.Write(str[slen-int(precision):i])
+    } else if precision>displayPrecision {
+        os.Write(str[slen-int(precision):slen-int(precision)+int(displayPrecision)])
+    } else {
+        os.Write(str[slen-int(precision):i])
+        for i:=0; i < int(displayPrecision-precision); i++ {
+            os.WriteByte('0')
+        }
+    }
     return os.String()
 }
 
-func (a UDec128) FormatBytes(precision uint, trimZeroes bool) []byte {
+func (a UDec128) Format(precision uint, trimZeroes bool) string {
+    return a.FormatNew(precision, precision, trimZeroes)
+}
+
+func (a UDec128) FormatNewBytes(precision, displayPrecision uint,
+                                trimZeroes bool) []byte {
     if a[0]==0 && a[1]==0 { return zeroPart[:3] }
     if precision==0 { return goint128.UInt128(a).FormatBytes() }
     str := goint128.UInt128(a).FormatBytes()
@@ -259,9 +273,22 @@ func (a UDec128) FormatBytes(precision uint, trimZeroes bool) []byte {
     copy(os[:l], str[:l])
     os[l] = '.'
     copy(os[l+1:], str[slen-int(precision):i])
+    if !trimZeroes && precision!=displayPrecision {
+        if precision>displayPrecision {
+            os = os[:i+1-int(precision)+int(displayPrecision)]
+        } else {
+            copy(os[l+1:], str[slen-int(precision):i])
+            for i:=0; i < int(displayPrecision-precision); i++ {
+                os = append(os, '0')
+            }
+        }
+    }
     return os
 }
 
+func (a UDec128) FormatBytes(precision uint, trimZeroes bool) []byte {
+    return a.FormatNewBytes(precision, precision, trimZeroes)
+}
 
 func ParseUDec128(str string, precision uint, rounding bool) (UDec128, error) {
     if precision==0 {
