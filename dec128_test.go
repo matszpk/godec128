@@ -538,8 +538,22 @@ func TestUDec128Format(t *testing.T) {
     testCases2 := []UDec128Fmt2TC {
         UDec128Fmt2TC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 15, 17, false,
             "217224419425.14369333151019100" },
+        UDec128Fmt2TC{ UDec128{ 0x5f75348b0131b2f0, 0xb3af0f }, 15, 17, false,
+            "217224419425.14369333151000000" },
         UDec128Fmt2TC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 15, 12, false,
             "217224419425.143693331510" },
+        UDec128Fmt2TC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 15, 10, false,
+            "217224419425.1436933315" },
+        UDec128Fmt2TC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 15, 17, true,
+            "217224419425.143693331510191" },
+        UDec128Fmt2TC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 15, 10, true,
+            "217224419425.1436933315" },
+        UDec128Fmt2TC{ UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, 15, 12, true,
+            "217224419425.14369333151" },
+        UDec128Fmt2TC{ UDec128{ 0x5f75348b0131b2f0, 0xb3af0f }, 15, 12, true,
+            "217224419425.14369333151" },
+        UDec128Fmt2TC{ UDec128{ 0x5f75348b0131b2f0, 0xb3af0f }, 15, 13, true,
+            "217224419425.14369333151" },
     }
     for i, tc := range testCases2 {
         a := tc.a

@@ -197,6 +197,7 @@ func UDec128DivFull(hi, lo, b UDec128) UDec128 {
 
 var zeroPart []byte = []byte("0.000000000000000000000000000")
 
+// new format routine with additional displayPrecision argument.
 func (a UDec128) FormatNew(precision, displayPrecision uint, trimZeroes bool) string {
     if a[0]==0 && a[1]==0 { return "0.0" }
     if precision==0 { return goint128.UInt128(a).Format() }
@@ -225,10 +226,16 @@ func (a UDec128) FormatNew(precision, displayPrecision uint, trimZeroes bool) st
     os.Grow(i)
     os.Write(str[:slen-int(precision)])
     os.WriteByte('.')
-    if trimZeroes || precision==displayPrecision {
+    if (trimZeroes && precision<displayPrecision) || precision==displayPrecision {
         os.Write(str[slen-int(precision):i])
     } else if precision>displayPrecision {
-        os.Write(str[slen-int(precision):slen-int(precision)+int(displayPrecision)])
+        x := slen-int(precision)+int(displayPrecision) // fix
+        if trimZeroes {
+            if x>i { x = i }
+            for x--; str[x]=='0'; x-- { }
+            x++
+        }
+        os.Write(str[slen-int(precision):x])
     } else {
         os.Write(str[slen-int(precision):i])
         for i:=0; i < int(displayPrecision-precision); i++ {
@@ -238,10 +245,12 @@ func (a UDec128) FormatNew(precision, displayPrecision uint, trimZeroes bool) st
     return os.String()
 }
 
+// format number
 func (a UDec128) Format(precision uint, trimZeroes bool) string {
     return a.FormatNew(precision, precision, trimZeroes)
 }
 
+// new format routine with additional displayPrecision argument. Format to bytes
 func (a UDec128) FormatNewBytes(precision, displayPrecision uint,
                                 trimZeroes bool) []byte {
     if a[0]==0 && a[1]==0 { return zeroPart[:3] }
@@ -273,9 +282,15 @@ func (a UDec128) FormatNewBytes(precision, displayPrecision uint,
     copy(os[:l], str[:l])
     os[l] = '.'
     copy(os[l+1:], str[slen-int(precision):i])
-    if !trimZeroes && precision!=displayPrecision {
+    if !(trimZeroes && precision<displayPrecision) && precision!=displayPrecision {
         if precision>displayPrecision {
-            os = os[:i+1-int(precision)+int(displayPrecision)]
+            x := slen+1-int(precision)+int(displayPrecision) // fix
+            if trimZeroes {
+                if x>i+1 { x = i+1 }
+                for x--; os[x]=='0'; x-- { }
+                x++
+            }
+            os = os[:x]
         } else {
             copy(os[l+1:], str[slen-int(precision):i])
             for i:=0; i < int(displayPrecision-precision); i++ {
@@ -286,10 +301,12 @@ func (a UDec128) FormatNewBytes(precision, displayPrecision uint,
     return os
 }
 
+// format number to bytes
 func (a UDec128) FormatBytes(precision uint, trimZeroes bool) []byte {
     return a.FormatNewBytes(precision, precision, trimZeroes)
 }
 
+// parse number from string
 func ParseUDec128(str string, precision uint, rounding bool) (UDec128, error) {
     if precision==0 {
         v, err := goint128.ParseUInt128(str)
@@ -402,6 +419,7 @@ func ParseUDec128(str string, precision uint, rounding bool) (UDec128, error) {
     return UDec128{}, nil
 }
 
+// parse number from bytes
 func ParseUDec128Bytes(str []byte, precision uint, rounding bool) (UDec128, error) {
     if precision==0 {
         v, err := goint128.ParseUInt128Bytes(str)
@@ -541,10 +559,12 @@ var float64_revpowers []float64 = []float64{
     0.000000000000000001,
 }
 
+// convert to float64
 func (a UDec128) ToFloat64(precision uint) float64 {
     return goint128.UInt128(a).ToFloat64()*float64_revpowers[precision]
 }
 
+// convert float64 to UDec128
 func Float64ToUDec128(a float64, precision uint) (UDec128, error) {
     r, err := goint128.Float64ToUInt128(a*float64(uint64_powers[precision]))
     return UDec128(r), err
