@@ -667,6 +667,7 @@ func TestUDec128Parse(t *testing.T) {
         UDec128ParseTC{ ".0e-3", 10, false, UDec128{}, nil },
         UDec128ParseTC{ "0.e-3", 10, false, UDec128{}, nil },
         UDec128ParseTC{ "12344", 0, false, UDec128{ 12344, 0 }, nil },
+        UDec128ParseTC{ "12344.", 0, false, UDec128{ 12344, 0 }, nil },
         UDec128ParseTC{ "12344.0000", 0, false, UDec128{ 12344, 0 }, nil },
         UDec128ParseTC{ "12344.7000", 0, false, UDec128{ 12344, 0 }, nil },
         UDec128ParseTC{ "12344.7000", 0, true, UDec128{ 12345, 0 }, nil },
