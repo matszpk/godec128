@@ -308,10 +308,6 @@ func (a UDec128) FormatBytes(precision uint, trimZeroes bool) []byte {
 
 // parse number from string
 func ParseUDec128(str string, precision uint, rounding bool) (UDec128, error) {
-    if precision==0 {
-        v, err := goint128.ParseUInt128(str)
-        return UDec128(v), err
-    }
     slen := len(str)
     epos := strings.LastIndexByte(str, 'e')
     if epos!=-1 {
@@ -421,11 +417,6 @@ func ParseUDec128(str string, precision uint, rounding bool) (UDec128, error) {
 
 // parse number from bytes
 func ParseUDec128Bytes(str []byte, precision uint, rounding bool) (UDec128, error) {
-    if precision==0 {
-        v, err := goint128.ParseUInt128Bytes(str)
-        return UDec128(v), err
-    }
-    
     slen := len(str)
     epos := bytes.LastIndexByte(str, 'e')
     if epos!=-1 {
