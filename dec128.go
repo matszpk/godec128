@@ -60,6 +60,11 @@ func (a UDec128) Cmp(b UDec128) int {
     return goint128.UInt128(a).Cmp(goint128.UInt128(b))
 }
 
+// return true if zero
+func (a UDec128) IsZero() bool {
+    return a[0]==0 && a[1]==0
+}
+
 var uint64_powers []uint64 = []uint64{
     1,
     10,
