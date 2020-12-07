@@ -49,7 +49,7 @@ func getPanic2(f func()) (bool, string) {
     expected UDec128
 }
  
- func TestUDec128Add(t *testing.T) {
+func TestUDec128Add(t *testing.T) {
      testCases := []UDec128TC {
         UDec128TC{ UDec128{ 2454, 3421 }, UDec128{ 78731, 831 },
                 UDec128{ 81185, 4252 } },
@@ -68,9 +68,9 @@ func getPanic2(f func()) (bool, string) {
                      i, a, b, tc.a, tc.b)
         }
     }
- }
+}
  
- func TestUDec128Sub(t *testing.T) {
+func TestUDec128Sub(t *testing.T) {
     testCases := []UDec128TC {
         UDec128TC{ UDec128{ 81185, 4252 }, UDec128{ 2454, 3421 },
                 UDec128{ 78731, 831 } },
@@ -80,6 +80,52 @@ func getPanic2(f func()) (bool, string) {
     for i, tc := range testCases {
         a, b := tc.a, tc.b
         result := tc.a.Sub(tc.b)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: %v-%v->%v!=%v",
+                     i, tc.a, tc.b, tc.expected, result)
+        }
+        if tc.a!=a || tc.b!=b {
+            t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",
+                     i, a, b, tc.a, tc.b)
+        }
+    }
+}
+
+type UDec128_64TC struct {
+    a UDec128
+    b uint64
+    expected UDec128
+}
+
+func TestUDec128Add64(t *testing.T) {
+    testCases := []UDec128_64TC {
+        UDec128_64TC{ UDec128{ 3454, 3421 }, 78731, UDec128{ 82185, 3421 } },
+        UDec128_64TC{ UDec128{ 0xffffffffffff1001, 0x2446 }, 0xf003,
+                UDec128{ 0x4, 0x2447 } },
+    }
+    for i, tc := range testCases {
+        a, b := tc.a, tc.b
+        result := tc.a.Add64(tc.b)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: %v+%v->%v!=%v",
+                     i, tc.a, tc.b, tc.expected, result)
+        }
+        if tc.a!=a || tc.b!=b {
+            t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",
+                     i, a, b, tc.a, tc.b)
+        }
+    }
+}
+
+func TestUDec128Sub64(t *testing.T) {
+    testCases := []UDec128_64TC {
+        UDec128_64TC{ UDec128{ 81185, 9165 }, 2454, UDec128{ 78731, 9165 } },
+        UDec128_64TC{ UDec128{ 0x5, 0xccff }, 0xffffffffffff2001,
+                UDec128{ 0xe004, 0xccfe } },
+    }
+    for i, tc := range testCases {
+        a, b := tc.a, tc.b
+        result := tc.a.Sub64(tc.b)
         if tc.expected!=result {
             t.Errorf("Result mismatch: %d: %v-%v->%v!=%v",
                      i, tc.a, tc.b, tc.expected, result)
@@ -220,12 +266,6 @@ func TestUDec128Mul(t *testing.T) {
                      i, a, b, tc.a, tc.b)
         }
     }
-}
-
-type UDec128_64TC struct {
-    a UDec128
-    b uint64
-    expected UDec128
 }
 
 func TestUDec128Mul64(t *testing.T) {

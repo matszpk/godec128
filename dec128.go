@@ -43,6 +43,11 @@ func (a UDec128) AddC(b UDec128, oldCarry uint64) (UDec128, uint64) {
     return UDec128(v), c
 }
 
+// add 128-bit decimal fixed point and 64-bit fixed decimal point
+func (a UDec128) Add64(b uint64) UDec128 {
+    return UDec128(goint128.UInt128(a).Add64(b))
+}
+
 // subtract 128-bit decimal fixed points
 func (a UDec128) Sub(b UDec128) UDec128 {
     return UDec128(goint128.UInt128(a).Sub(goint128.UInt128(b)))
@@ -52,6 +57,11 @@ func (a UDec128) Sub(b UDec128) UDec128 {
 func (a UDec128) SubB(b UDec128, oldBorrow uint64) (UDec128, uint64) {
     v, br := goint128.UInt128(a).SubB(goint128.UInt128(b), oldBorrow)
     return UDec128(v), br
+}
+
+// subtract 128-bit decimal fixed point and 64-bit fixed decimal point
+func (a UDec128) Sub64(b uint64) UDec128 {
+    return UDec128(goint128.UInt128(a).Sub64(b))
 }
 
 // compare 128-bit decimal fixed points and return 0 if they equal,
