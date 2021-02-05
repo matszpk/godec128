@@ -240,6 +240,7 @@ func (a UDec128) FormatNew(precision, displayPrecision uint, trimZeroes bool) st
     var os strings.Builder
     os.Grow(i)
     os.Write(str[:slen-int(precision)])
+    dotPos := os.Len()
     os.WriteByte('.')
     if (trimZeroes && precision<displayPrecision) || precision==displayPrecision {
         os.Write(str[slen-int(precision):i])
@@ -256,6 +257,9 @@ func (a UDec128) FormatNew(precision, displayPrecision uint, trimZeroes bool) st
         for i:=0; i < int(displayPrecision-precision); i++ {
             os.WriteByte('0')
         }
+    }
+    if os.Len()==dotPos+1 {
+        os.WriteByte('0')
     }
     return os.String()
 }
@@ -295,6 +299,7 @@ func (a UDec128) FormatNewBytes(precision, displayPrecision uint,
     os := make([]byte, i+1)
     l := slen-int(precision)
     copy(os[:l], str[:l])
+    dotPos := l
     os[l] = '.'
     copy(os[l+1:], str[slen-int(precision):i])
     if !(trimZeroes && precision<displayPrecision) && precision!=displayPrecision {
@@ -312,6 +317,9 @@ func (a UDec128) FormatNewBytes(precision, displayPrecision uint,
                 os = append(os, '0')
             }
         }
+    }
+    if len(os)==dotPos+1 {
+        os = append(os, '0')
     }
     return os
 }

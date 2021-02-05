@@ -546,7 +546,7 @@ func TestUDec128Format(t *testing.T) {
         UDec128FmtTC{ UDec128{ 33000000000000000, 0 }, 15, false,
             "33.000000000000000" },
         UDec128FmtTC{ UDec128{ 33000000000000000, 0 }, 15, true,
-            "33." },
+            "33.0" },
         UDec128FmtTC{ UDec128{ 33400000000000000, 0 }, 15, true,
             "33.4" },
         UDec128FmtTC{ UDec128{ 33000400000000000, 0 }, 15, true,
