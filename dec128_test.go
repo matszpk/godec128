@@ -23,7 +23,7 @@
  
  import (
     "fmt"
-    //"strconv"
+    "strconv"
     "testing"
 )
 
@@ -626,7 +626,7 @@ type UDec128ParseTC struct {
 
 func TestUDec128Parse(t *testing.T) {
     testCases := []UDec128ParseTC {
-        /*UDec128ParseTC{ "217224419425.143693331510191", 15, false,
+        UDec128ParseTC{ "217224419425.143693331510191", 15, false,
             UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, nil },
         UDec128ParseTC{ "217224419425.1436933315101915", 15, false,
             UDec128{ 0x5f75348b0131b3af, 0xb3af0f }, nil },
@@ -697,11 +697,11 @@ func TestUDec128Parse(t *testing.T) {
             UDec128{ 1984593924556, 0 }, nil },
         UDec128ParseTC{ "12e3", 15, false, UDec128{ 12000000000000000000, 0 }, nil },
         UDec128ParseTC{ "12.e3", 15, false, UDec128{ 12000000000000000000, 0 }, nil },
-        UDec128ParseTC{ "12.77e3", 15, false, UDec128{ 12770000000000000000, 0 }, nil },*/
+        UDec128ParseTC{ "12.77e3", 15, false, UDec128{ 12770000000000000000, 0 }, nil },
         UDec128ParseTC{ "0.0e0", 10, false, UDec128{}, nil },
         UDec128ParseTC{ "0.0e1", 10, false, UDec128{}, nil },
         UDec128ParseTC{ "1.0e0", 10, false, UDec128{10000000000}, nil },
-        /*UDec128ParseTC{ ".0e1", 10, false, UDec128{}, nil },
+        UDec128ParseTC{ ".0e1", 10, false, UDec128{}, nil },
         UDec128ParseTC{ "0.e1", 10, false, UDec128{}, nil },
         UDec128ParseTC{ "0.0e3", 10, false, UDec128{}, nil },
         UDec128ParseTC{ ".0e3", 10, false, UDec128{}, nil },
@@ -716,7 +716,7 @@ func TestUDec128Parse(t *testing.T) {
         UDec128ParseTC{ "12344.", 0, false, UDec128{ 12344, 0 }, nil },
         UDec128ParseTC{ "12344.0000", 0, false, UDec128{ 12344, 0 }, nil },
         UDec128ParseTC{ "12344.7000", 0, false, UDec128{ 12344, 0 }, nil },
-        UDec128ParseTC{ "12344.7000", 0, true, UDec128{ 12345, 0 }, nil },*/
+        UDec128ParseTC{ "12344.7000", 0, true, UDec128{ 12345, 0 }, nil },
     }
     for i, tc := range testCases {
         result, err := ParseUDec128(tc.str, tc.precision, tc.rounding)
