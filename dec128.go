@@ -363,7 +363,7 @@ func ParseUDec128(str string, precision uint, rounding bool) (UDec128, error) {
             //fmt.Println("NewCommaPos:", newCommaPos, commaPos, exponent, i)
             var sb strings.Builder
             // add zeroes
-            if newCommaPos<0 {
+            if newCommaPos<=0 {
                 sb.WriteRune('.')
                 for ; newCommaPos<0;  newCommaPos++ {
                     sb.WriteRune('0')
@@ -429,8 +429,12 @@ func ParseUDec128(str string, precision uint, rounding bool) (UDec128, error) {
     } else {
         // less than in fraction
         s2 := str[:commaIdx] + str[commaIdx+1:]
-        v, err := goint128.ParseUInt128(s2)
-        if err!=nil { return UDec128{}, err }
+        var v goint128.UInt128
+        if len(s2)!=0 && s2!="00" {
+            var err error
+            v, err = goint128.ParseUInt128(s2)
+            if err!=nil { return UDec128{}, err }
+        }
         pow10ForVal := int(precision) - (slen-(commaIdx+1))
         chi, clo := v.MulFull(goint128.UInt128{uint64_powers[pow10ForVal], 0})
         if chi[0]!=0 || chi[1]!=0 {
@@ -475,7 +479,7 @@ func ParseUDec128Bytes(str []byte, precision uint, rounding bool) (UDec128, erro
             //fmt.Println("NewCommaPos:", newCommaPos, commaPos, exponent, i)
             var sb bytes.Buffer
             // add zeroes
-            if newCommaPos<0 {
+            if newCommaPos<=0 {
                 sb.WriteRune('.')
                 for ; newCommaPos<0;  newCommaPos++ {
                     sb.WriteRune('0')
@@ -545,8 +549,12 @@ func ParseUDec128Bytes(str []byte, precision uint, rounding bool) (UDec128, erro
         s2 := make([]byte, slen-1)
         copy(s2[:commaIdx], str[:commaIdx])
         copy(s2[commaIdx:], str[commaIdx+1:])
-        v, err := goint128.ParseUInt128Bytes(s2)
-        if err!=nil { return UDec128{}, err }
+        var v goint128.UInt128
+        if len(s2)!=0 && !bytes.Equal(s2, []byte("00")) {
+            var err error
+            v, err = goint128.ParseUInt128Bytes(s2)
+            if err!=nil { return UDec128{}, err }
+        }
         pow10ForVal := int(precision) - (slen-(commaIdx+1))
         chi, clo := v.MulFull(goint128.UInt128{uint64_powers[pow10ForVal], 0})
         if chi[0]!=0 || chi[1]!=0 {
